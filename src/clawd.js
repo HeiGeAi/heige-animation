@@ -577,7 +577,7 @@ const EMO = {
 //   clawd(x, y, u, feel('happy', t))       clawd(x, y, u, { ...feel('sad', t), view: 'q', hat: 'beanie' })
 function feel(name, t, over = {}) {
   const E = EMO[name] || EMO.neutral;
-  return { eyes: E.eyes, mouth: E.mouth, tint: E.tint, tintK: E.tintK ?? 1, blush: E.blush || 0, gloom: E.gloom || 0,
+  return { emo: name, eyes: E.eyes, mouth: E.mouth, tint: E.tint, tintK: E.tintK ?? 1, blush: E.blush || 0, gloom: E.gloom || 0,
            lid: E.lid || 0, emote: E.emote, ...(E.body ? E.body(t) : {}), ...over };
 }
 
@@ -600,6 +600,8 @@ function emotions(t, keys, o = {}) {
     const k = backOut(seg(age, 0, .4)), kc = ease(seg(age, 0, .3));
     for (const f in base) cur[f] = lerp(prev[f] ?? base[f], cur[f] ?? base[f], k);
     const a = tintCols(prev), b = tintCols(cur);
+    // the tint cross-fade by name, for characters that tint something other than Clawd's clay (heige.js tints the face)
+    cur.tintFade = { a: prev.tint, ak: prev.tintK ?? 1, b: cur.tint, bk: cur.tintK ?? 1, k: kc };
     cur.col = mixCol(a.col, b.col, kc); cur.dk = mixCol(a.dk, b.dk, kc); cur.lt = mixCol(a.lt, b.lt, kc); cur.tint = null;
     for (const f of ['blush', 'gloom', 'lid']) cur[f] = lerp(prev[f] || 0, cur[f] || 0, kc);
   }
