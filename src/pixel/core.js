@@ -36,6 +36,15 @@ function pline(x0, y0, x1, y1, c) {
   let e = dx + dy;
   for (;;) { pset(x0, y0, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } }
 }
+// Shift the whole buffer by whole pixels (a screen shake); the edge rows and columns repeat into the gap.
+function pxShift(dx, dy) {
+  if (!dx && !dy) return;
+  const src = BUF.slice();
+  for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) {
+    const sx = clamp(x - dx, 0, PW - 1), sy = clamp(y - dy, 0, PH - 1), i = (y * PW + x) * 4, j = (sy * PW + sx) * 4;
+    BUF[i] = src[j]; BUF[i + 1] = src[j + 1]; BUF[i + 2] = src[j + 2]; BUF[i + 3] = src[j + 3];
+  }
+}
 // Ordered dithering between two colours: k = 0 is all a, 1 is all b. The 4×4 Bayer matrix keeps it crisp and stable.
 const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
 const ditherPick = (x, y, a, b, k) => (BAYER[y & 3][x & 3] + .5) / 16 < k ? b : a;
