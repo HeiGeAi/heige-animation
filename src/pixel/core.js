@@ -4,20 +4,14 @@
 // No p5 and no brushes: plain typed arrays and a 2D canvas, so even a full-frame sky of dithered pixels stays cheap.
 // As in the painted kit, every frame is a pure function of t, and the page exposes renderAt / renderSheet / LOOPS, so
 // render.mjs drives it unchanged:  node render.mjs --page=pixel.html --loop=<name> --stills=1 --out=out/x
-const W = 1920, H = 1080, PW = 240, PH = 135, PS = W / PW;
-const TAU = Math.PI * 2, DUR = PROJECT.duration, BEAT = 60 / PROJECT.bpm, OFF = PROJECT.offset || 0;
-const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-const lerp = (a, b, x) => a + (b - a) * x;
-const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
-const seg = (t, a, b) => clamp((t - a) / (b - a));
-const frac = x => x - Math.floor(x);
-const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
-const bpOf = t => (t - OFF) / BEAT;
-let T = 0;
+// W, H, TAU, PAL, the easing, timing and motion helpers and T come from motion.js, shared with the painted engine, and
+// clawd.js supplies the acting (EMO, feel(), emotions(), move(), turn()), so a pixel character takes the same options.
+// The logical canvas is PW × PH; a loop can ask for another size with loop.res = [w, h] and loop.px = scale (sheets do).
+let PW = 240, PH = 135;
 const LOOPS = {};
 
 // ---------- the buffer ----------
-const BUF = new Uint8ClampedArray(PW * PH * 4);
+let BUF = new Uint8ClampedArray(PW * PH * 4);
 const RGB = {};
 const rgb = c => RGB[c] || (RGB[c] = [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)]);
 function pset(x, y, c) {
@@ -121,17 +115,30 @@ class Spr {
 
 // ---------- frames ----------
 let OUT = null, OUTX = null, SMALL = null, SMALLX = null, SMALLID = null;
+// Size the logical canvas and the output for the loop being drawn: 240 × 135 at 8× (1920 × 1080) unless it asks otherwise.
+function setRes(pw, ph, px) {
+  const ow = pw * px, oh = ph * px;
+  if (pw !== PW || ph !== PH || !SMALLID) {
+    PW = pw; PH = ph; BUF = new Uint8ClampedArray(PW * PH * 4);
+    SMALL.width = PW; SMALL.height = PH; SMALLID = SMALLX.createImageData(PW, PH);
+  }
+  if (OUT.width !== ow || OUT.height !== oh) { OUT.width = ow; OUT.height = oh; }
+}
 function frameAt(t) {
   T = t;
+  const L = window.LOOP || LOOPS.default, [pw, ph] = (L && L.res) || [240, 135];
+  setRes(pw, ph, (L && L.px) || Math.round(W / pw));
   BUF.fill(0);
-  if (window.LOOP) window.LOOP(t); else if (LOOPS.default) LOOPS.default(t);
+  if (L) L(t);
   SMALLID.data.set(BUF); SMALLX.putImageData(SMALLID, 0, 0);
   OUTX.imageSmoothingEnabled = false;
-  OUTX.drawImage(SMALL, 0, 0, W, H);
+  OUTX.drawImage(SMALL, 0, 0, OUT.width, OUT.height);
+  if (L && L.overlay) L.overlay(OUTX, t, OUT.width / PW);   // labels and notes for sheets, drawn at full resolution
 }
 window.renderAt = async (t, type = 'image/png', q = .92) => { frameAt(t); return OUT.toDataURL(type, q); };
 window.renderSheet = async (times, cols = 3, w = 640, crop = null) => {
-  const [, , cw, ch] = crop || [0, 0, W, H], h = Math.round(w * ch / cw), rows = Math.ceil(times.length / cols), sc = document.createElement('canvas');
+  frameAt(times[0]);
+  const [, , cw, ch] = crop || [0, 0, OUT.width, OUT.height], h = Math.round(w * ch / cw), rows = Math.ceil(times.length / cols), sc = document.createElement('canvas');
   sc.width = cols * w; sc.height = rows * h; const c = sc.getContext('2d'), ms = [];
   c.imageSmoothingEnabled = false;
   for (let i = 0; i < times.length; i++) {
@@ -145,7 +152,7 @@ window.renderSheet = async (times, cols = 3, w = 640, crop = null) => {
 window.gpuInfo = () => 'pixel back end (2D canvas)';
 window.addEventListener('load', () => {
   OUT = document.getElementById('out'); OUTX = OUT.getContext('2d');
-  SMALL = document.createElement('canvas'); SMALL.width = PW; SMALL.height = PH; SMALLX = SMALL.getContext('2d'); SMALLID = SMALLX.createImageData(PW, PH);
+  SMALL = document.createElement('canvas'); SMALLX = SMALL.getContext('2d');
   const q = new URLSearchParams(location.search).get('loop'); if (q && LOOPS[q]) window.LOOP = LOOPS[q];
   window.ready = true;
   if (!location.search.includes('render')) frameAt(+(new URLSearchParams(location.search).get('t') || 0));

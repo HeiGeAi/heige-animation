@@ -216,7 +216,8 @@ node render.mjs --encode --out=out/video.mp4                    # … then encod
 | file | what's in it |
 |---|---|
 | `src/config.js` | `PROJECT = { duration, bpm, offset, audio? }` |
-| `src/core.js` | canvas, palette, timing and motion helpers, `paint()`, camera, full-frame effects, `glow()`, lettering, paper, render hooks |
+| `src/motion.js` | size, tempo, palette, easing, and the timing and motion helpers (shared by the painted and the pixel back ends) |
+| `src/core.js` | the painted engine: boil, `paint()`, camera, full-frame effects, `glow()`, lettering, paper, render hooks |
 | `src/clawd.js` | Clawd: views, emotions, eyes, mouths, hats, emotes, moves |
 | `src/timeline.js` | `shots()`, `LOOPS`, `brushWipe()` |
 | `src/sheets.js` | the model sheets as loops (`?loop=emotions`, `?loop=views`) |
@@ -439,6 +440,36 @@ These are the things that make a Clawd video look generated. Check your storyboa
 - muddy green-grey glows from painting yellow over blue
 - props floating near a hand instead of touching it
 - every shot a different world with nothing linking them
+
+## Pixel back end
+
+The same acting code (`EMO`, `feel()`, `emotions()`, `move()`, `turn()` in clawd.js, and `jump()`, `take()` in motion.js) also drives pixel-art characters. `pixel.html` loads it without p5: each frame is drawn into a small logical canvas (240 × 135 unless the loop asks for another) and blown up with hard edges to 1920 × 1080. render.mjs drives it unchanged with `--page=pixel.html`:
+
+```bash
+node render.mjs --page=pixel.html --loop=pxActing --clip --fps=24 --out=out/pixel/acting.mp4     # the acting test
+node render.mjs --page=pixel.html --loop=pxHeigeEmotions --stills=1.6 --out=out/pixel/sheets     # 31 emotions
+node render.mjs --page=pixel.html --loop=pxHeigeViews --strip=0:1 --fps=12 --out=out/check/walk.jpg   # views, walks, turn
+```
+
+**The medium.** Nothing is ever scaled or rotated: every pixel stays the same size, so motion is whole-pixel offsets and drawn frames. Characters act on twos: pass `onTwos(t)` to `feel()` and `emotions()`. The palette is night blues and violets, amber lights and 黑哥青 cyan, with no green anywhere; `python3 tools/pixel/green_scan.py <png or mp4>` checks a render at full size. A loop can ask for its own canvas with `loop.res = [w, h]` and `loop.px = scale` (the acting test is 320 × 180 at 6×), and `loop.overlay(ctx, t, scale)` draws labels at full resolution (sheets only).
+
+**Characters.** `heigePx(x, y, o)` draws 黑哥 and `clawdPx(x, y, o)` draws pixel Clawd, with (x, y) the ground point between the feet and `o` the same option bag as `clawd()`:
+
+| option | what the rig does with it |
+|---|---|
+| `dy`, `dx` | whole pixels, 4 per unit for 黑哥 (5 for Clawd) |
+| `sq` | a crouch or a stretch: the torso and head sink or rise a pixel or two; a big stretch lifts his cap (`capPop` 0..1 does it by hand) |
+| `rot` | a lean of up to 2 pixels at the head |
+| `aL`, `aR` | arm frames by angle: down, low, out, up, cheer. `poseL` / `poseR` pick a drawn gesture instead: point, waveA, waveB (`'wave'` alternates them), fistUp, hip, chin, belly, cover, scratch, clasp. Some emotions pick one themselves (`HG_EMO_ARMS`: proud = hands on hips, cry = fists on the eyes, thinking = hand on chin, idea = finger up) |
+| `walk` | eight drawings per stride cycle (one cycle = two steps); 28 px of travel per cycle looks planted |
+| `view`, `flip` | front, q, side, back (`qback` draws as back), all facing right; `flip` mirrors. `turn()` and `spinView()` step through them |
+| `eyes`, `mouth`, `brows` | stamps from `PX_EYES`, `PX_MOUTHS` and `PX_BROWS` in rig.js (every eye and mouth clawd.js has), inside his glasses; each emotion has a brow (`PX_BROW_OF`) |
+| `lookX`, `lookY`, `squint`, `blush`, `gloom`, `tint` | pupils move up to 2 pixels, squint closes the eyes, blush and gloom are drawn on the face, tint shifts the skin palette (disgust's green becomes lilac) |
+| `emote`, `emoteK`, `emoteAge` | pixel marks by the head (`PX_EMOTES`: all of clawd.js's), popping in a pixel high |
+
+**Files.** `src/pixel/core.js` (buffer, `Spr` sprites, dithering, frames), `src/pixel/rig.js` (the rig: a stack of keyed pixels, face stamps, emotes, skin tint, rim light), `src/pixel/heige.js` + `heige_parts.js` (黑哥's views, arm frames and walk; the parts are generated), `src/pixel/clawd_px.js`, `src/pixel/scene.js` (the night hill, shared as `window.pxNight`), `src/pixel/sheets.js` (model sheets) and `src/pixel/scenes/acting.js`.
+
+**Changing 黑哥.** His parts are built by `python3 tools/pixel/build_heige_rig.py` from the art in `art/heige/` (and `build_chibi.py` for the approved front head): edit the builder or the art, rebuild, and look at the sheets. The tools also take a new character from concept art: `pixelize.py` finds the grid of a generated "pixel art" image and turns it into a true sprite, `sprite2js.py` cleans it.
 
 ## About the demo
 

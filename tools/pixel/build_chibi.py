@@ -1,5 +1,5 @@
 """Build the clean chibi 黑哥 sprite: the body from the extracted concept (palette normalised), the head redrawn by hand
-on the same grid with clean pixel shapes. Writes design/sprites/hgChibi_final*.png and src/pixel/heige_variants/hgChibi.js.
+on the same grid with clean pixel shapes. Writes out/art/hgChibi_final*.png and src/pixel/heige_variants/hgChibi.js.
 
 usage: python3 build_chibi.py
 """
@@ -9,8 +9,8 @@ import numpy as np
 from PIL import Image
 
 REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-SRC = os.path.join(REPO, 'design', 'sprites', '01-Q萌大头_clean.png')   # from pixelize.py + sprite2js.py on the concept
-OUT = os.path.join(REPO, 'design', 'sprites', 'hgChibi_final')
+SRC = os.path.join(REPO, 'art', 'heige', 'chibi-concept-clean.png')   # the concept, through pixelize.py + sprite2js.py
+OUT = os.path.join(REPO, 'out', 'art', 'hgChibi_final')                # previews
 JS = os.path.join(REPO, 'src', 'pixel', 'heige_variants', 'hgChibi.js')
 
 P = {   # the clean palette
@@ -29,7 +29,9 @@ def nearest(c, keys):
     return min(keys, key=lambda k: float(((RGB[k] - c) ** 2).sum()))
 
 
-def main():
+def build(features=True):
+    """The chibi as a grid of palette keys. face=False leaves out the brows, the eyes and the mouth: the base the
+    animation rig stamps its expressions onto (see build_heige_rig.py)."""
     a = np.array(Image.open(SRC).convert('RGBA'))
     h, w = a.shape[:2]
     g = [['.'] * w for _ in range(h)]
@@ -98,7 +100,7 @@ def main():
     for (x, y) in face:
         if get(x, y) == 's' and y <= y_bot(x) + 2.4: S(x, y, 'd' if y <= y_bot(x) + 1.4 else 'S')
     # ---- brows: thick, slightly arched ----
-    for (x0, x1, s) in ((14, 21, -1), (30, 37, 1)):
+    for (x0, x1, s) in ((14, 21, -1), (30, 37, 1)) if features else ():
         for x in range(x0, x1 + 1): S(x, 25, 'O')
         for x in range(x0 + 1, x1): S(x, 24, 'O')
         S(x0 if s < 0 else x1, 26, 'O')   # the outer end drops a pixel
@@ -116,7 +118,7 @@ def main():
     for x in range(24, 28): S(x, 28, 'O')
     S(9, 31, 'O'); S(42, 31, 'O')
     # ---- eyes: round, dark, a white glint ----
-    for ex in (16, 32):
+    for ex in (16, 32) if features else ():
         for y in range(31, 36):
             for x in range(ex, ex + 4):
                 if (x in (ex, ex + 3)) and (y in (31, 35)): continue
@@ -124,8 +126,9 @@ def main():
         S(ex + 1, 32, 'w')
     # ---- nose and smile ----
     S(25, 36, 'S'); S(26, 36, 'S'); S(26, 37, 'd')
-    for x in range(24, 28): S(x, 42, 'O')
-    S(23, 41, 'O'); S(28, 41, 'O')
+    if features:
+        for x in range(24, 28): S(x, 42, 'O')
+        S(23, 41, 'O'); S(28, 41, 'O')
     # ---- the neck ----
     for y in range(46, 50):
         for x in range(22, 30):
@@ -138,13 +141,19 @@ def main():
     for j, row in enumerate(bunny):
         for i, ch in enumerate(row):
             if ch != '.': S(23 + i, 6 + j, ch)
+    return g
 
+
+def main():
+    g = build()
+    h, w = len(g), len(g[0])
     # ---- write ----
     img = np.zeros((h, w, 4), np.uint8)
     for y in range(h):
         for x in range(w):
             if g[y][x] != '.':
                 img[y, x, :3] = RGB[g[y][x]]; img[y, x, 3] = 255
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
     Image.fromarray(img, 'RGBA').save(OUT + '.png')
     Image.fromarray(img, 'RGBA').resize((w * 10, h * 10), Image.NEAREST).save(OUT + '_x10.png')
     rows = [''.join(r) for r in g]

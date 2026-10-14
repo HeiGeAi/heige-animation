@@ -27,15 +27,26 @@ That renders the 11-second demo in [src/scenes/demo.js](src/scenes/demo.js). Ope
 
 On Linux, `render.mjs` starts Chrome with `--no-sandbox` (Ubuntu 23.10+ blocks Chrome's sandbox in headless use) and also finds a Chromium installed by Playwright. With no GPU at all, add `--soft-gl` to render WebGL in software: slow on watercolour fills, but it works. On a headless Linux machine with an NVIDIA GPU (a cloud or cluster node), add `--gpu-angle=gl-egl` (or `vulkan`); `node gpu_probe.mjs <chrome path>` shows which renderer each set of flags gets.
 
+## Pixel back end
+
+The same emotions, moves and turns also drive pixel-art characters: `pixel.html` draws into a small canvas and blows it up with hard edges, every pixel the same size. It comes with 黑哥 (four views, 31 emotions with drawn gestures, walk cycles) and pixel Clawd. See the Pixel back end section of the guide.
+
+```bash
+node render.mjs --page=pixel.html --loop=pxActing --clip --fps=24 --out=out/pixel/acting.mp4
+```
+
 ## What's here
 
 | path | what it is |
 |---|---|
 | [ANIMATION_GUIDE.md](ANIMATION_GUIDE.md) | The rules, the workflow and the full API. Read it first. |
 | [src/clawd.js](src/clawd.js) | Clawd: views, emotions, eyes, mouths, hats, emotes, dances |
-| [src/core.js](src/core.js) | Painting, timing, motion helpers, camera, light, paper |
+| [src/motion.js](src/motion.js) | Tempo, easing, timing and motion helpers, shared by both back ends |
+| [src/core.js](src/core.js) | The painted engine: boil, painting, camera, light, paper |
 | [src/timeline.js](src/timeline.js) | Shots, loops and the brush-wipe transition |
 | [src/config.js](src/config.js) | Length and tempo |
 | [src/scenes/](src/scenes/) | Your video goes here (the demo is an example) |
 | [render.mjs](render.mjs) | Headless renderer: contact sheets, frame strips, crops, stills, MP4 |
+| [pixel.html](pixel.html), [src/pixel/](src/pixel/) | The pixel back end: the same acting code drawn as pixel art, with 黑哥 and pixel Clawd |
+| [tools/pixel/](tools/pixel/), [art/heige/](art/heige/) | Turning concept art into sprites and building 黑哥's parts; green_scan.py |
 | [docs/](docs/) | Model sheets: [emotions](docs/emotions.jpg) (also [animated](docs/emotions.webp)) and [views, motion and hats](docs/views.jpg) |
