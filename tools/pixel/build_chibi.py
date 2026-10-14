@@ -29,9 +29,12 @@ def nearest(c, keys):
     return min(keys, key=lambda k: float(((RGB[k] - c) ** 2).sum()))
 
 
-def build(features=True):
-    """The chibi as a grid of palette keys. face=False leaves out the brows, the eyes and the mouth: the base the
-    animation rig stamps its expressions onto (see build_heige_rig.py)."""
+LOGO = False   # the white bunny on the cap's front panel: off since 2026-10-14 (Blake: 人物帽子头上的兔子去掉吧)
+
+
+def build(features=True, logo=LOGO):
+    """The chibi as a grid of palette keys. features=False leaves out the brows, the eyes and the mouth: the base the
+    animation rig stamps its expressions onto (see build_heige_rig.py). logo=True puts the bunny back on the cap."""
     a = np.array(Image.open(SRC).convert('RGBA'))
     h, w = a.shape[:2]
     g = [['.'] * w for _ in range(h)]
@@ -133,12 +136,12 @@ def build(features=True):
     for y in range(46, 50):
         for x in range(22, 30):
             if get(x, y) in ('.', 'O', 'k', 'c', 'm', 'd', 'S') and y <= 48: S(x, y, 'S' if y == 46 else 's')
-    # ---- the cap's bunny, crisp ----
+    # ---- the cap's front panel: the concept's logo cleared to plain cap; the bunny only when asked for ----
     for y in range(6, 14):
         for x in range(21, 31):
             if get(x, y) == 'w' or get(x, y) == 'g': S(x, y, 'c')
     bunny = ['.w.w.', '.w.w.', '.www.', 'wwwww', 'wOwOw', 'wwwww', '.www.']
-    for j, row in enumerate(bunny):
+    for j, row in enumerate(bunny if logo else ()):
         for i, ch in enumerate(row):
             if ch != '.': S(23 + i, 6 + j, ch)
     return g

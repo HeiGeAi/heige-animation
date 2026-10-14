@@ -4,6 +4,7 @@ The concept's silhouettes, caps, hair and ears are good and its faces are noisy,
 cleans only the face (its eyes, brows, mouth and glasses become skin), and redraws the glasses to the front's
 construction. The face features are left out; the JS rig stamps them per emotion.
 """
+from build_chibi import LOGO
 from pxgrid import Grid
 
 N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -64,7 +65,7 @@ def q_head(ai):
     """Three-quarters, facing right: the concept's cap, hair and ears, the face cleaned and re-drawn to the front's
     construction (13-wide near lens, 10-wide far lens, the nose under the bridge)."""
     g = fill_holes(ai.where(lambda x, y, c: y <= 45 and not (y >= 44 and c in 'kcmh' and x < 18)))
-    bunny(g, 28, 5)
+    bunny(g, 28, 5, stamp=LOGO)
     g = despeckle(g, keys='kcmhrgG')
     # the brim's lower outline, column by column (read off the concept): the face is everything under it
     def ob(x): return 25 if x <= 19 else 23 if x <= 22 else 22 if x <= 24 else 21
@@ -135,10 +136,11 @@ def fill_holes(g):
 BUNNY = ['.w.w.', '.w.w.', '.www.', 'wwwww', 'wOwOw', 'wwwww', '.www.']
 
 
-def bunny(g, x0, y0):
+def bunny(g, x0, y0, stamp=True):
+    """Clear the concept's logo (its whites, greys and the dark eye) to plain cap, then stamp the bunny if asked."""
     for y in range(y0 - 1, y0 + 8):
         for x in range(x0 - 1, x0 + 6):
-            if g.get((x, y)) in ('w', 'g', 'G'): g[(x, y)] = 'c'
-    for j, row in enumerate(BUNNY):
+            if g.get((x, y)) in ('w', 'g', 'G', 'l') or (g.get((x, y)) in ('k', 'O') and y0 <= y <= y0 + 6 and x0 <= x <= x0 + 4): g[(x, y)] = 'c'
+    for j, row in enumerate(BUNNY if stamp else ()):
         for i, ch in enumerate(row):
             if ch != '.': g[(x0 + i, y0 + j)] = ch

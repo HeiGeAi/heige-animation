@@ -40,7 +40,7 @@ def head_parts():
     full = Grid.from_rows([''.join(r) for r in bc.build(features=False)])
     face_set = s_ell(25.5, 33.6, 15.6, 12.6, 2.45)
     head = full.where(lambda x, y, c: y <= 41 or (y <= 45 and (x, y) in face_set))
-    # the cap: crown and brim (and the bunny), everything above the brim's lower edge that isn't skin, hair or ear
+    # the cap: crown and brim, everything above the brim's lower edge that isn't skin, hair or ear
     def y_bot(x): return 21.2 + ((x - 25.5) / 19.5) ** 2 * 3.6 if abs(x - 25.5) <= 20 else 99
     def in_cap(x, y, c):
         if y <= 13: return True
