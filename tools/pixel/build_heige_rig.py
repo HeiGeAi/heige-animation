@@ -169,6 +169,52 @@ def front_arms(armL_down):
     return arms
 
 
+# ---------- arm frames for the other views ----------
+# Three-quarters: the near arm is the front's left arm moved to the 3/4 shoulder; gestures that reach the face move with
+# the face (it sits further right in 3/4). The far arm is the front's right arm (mirrored), moved to its shoulder,
+# in shadow, and drawn behind the torso. Back: the front's silhouettes, without the gestures made in front of the body.
+Q_NEAR_SHIFT = {'chin': 4, 'cover': 5, 'clasp': 2, 'belly': 2}
+BACK_POSES = ('low', 'out', 'up', 'cheer', 'waveA', 'waveB', 'point', 'fistUp', 'hip', 'scratch')
+SHADE = {'c': 'k', 'm': 'c', 'h': 'm', 's': 'S', 'S': 'd', 'l': 's', 'd': 'd'}
+# Profile, facing right: the near arm from its shoulder, reaching forward.
+SHOULDER_SIDE = (21.5, 53.5)
+SIDE_POSES = {
+    #          elbow          wrist          hand     hand centre
+    'low':     ((24.5, 60.5), (28.5, 65.5), 'fist', (30.5, 68.0)),
+    'out':     ((28.5, 56.5), (34.5, 57.5), 'fist', (38.0, 57.5)),
+    'up':      ((29.5, 50.5), (36.5, 46.5), 'fist', (40.0, 44.5)),      # raised arms reach out in front of the face
+    'cheer':   ((28.5, 47.5), (37.5, 41.5), 'fist', (42.0, 38.5)),
+    'point':   ((28.5, 47.5), (36.5, 41.5), 'point', (42.0, 36.0)),
+    'waveA':   ((27.5, 61.5), (34.5, 50.5), 'palm', (38.0, 45.0)),
+    'waveB':   ((27.5, 61.5), (36.5, 51.5), 'palmT', (40.5, 46.0)),
+    'fistUp':  ((27.5, 61.5), (30.5, 51.5), 'fist', (31.5, 47.5)),
+    'hip':     ((16.5, 60.5), (20.5, 66.5), 'fist', (22.5, 67.5)),
+    'chin':    ((25.5, 63.5), (32.5, 53.5), 'fist', (34.5, 48.5)),
+    'belly':   ((23.5, 63.5), (28.5, 63.5), 'fist', (31.0, 63.0)),
+    'cover':   ((27.5, 58.5), (33.5, 45.5), 'fist', (35.5, 38.5)),
+    'scratch': ((17.5, 48.5), (19.5, 37.5), 'palm', (20.5, 32.0)),
+    'clasp':   ((25.5, 62.5), (30.5, 57.5), 'fist', (32.5, 56.0)),
+}
+
+
+def view_arm_frames(view, front):
+    """{part: {frame: grid}} for one of q / side / back (the hanging and walking frames come from the concept)."""
+    out = {'armA': {}, 'armB': {}}
+    if view == 'q':
+        for name, g in front.items():
+            if name == 'down': continue
+            out['armA'][name] = g.shifted(1 + Q_NEAR_SHIFT.get(name, 0), 0)
+            out['armB'][name] = Grid({p: SHADE.get(c, c) for p, c in mirror(g).items()}).shifted(-2, -1)
+    elif view == 'side':
+        for name, (E, W, hand, hat) in SIDE_POSES.items():
+            out['armA'][name] = arm_from_joints(SHOULDER_SIDE, E, W, hand, hat)
+    elif view == 'back':
+        for name in BACK_POSES:
+            out['armA'][name] = front[name]
+            out['armB'][name] = mirror(front[name])
+    return out
+
+
 # ---------- the other views: q (three-quarters), side, back; all facing right, from the turnaround ----------
 VIEW_SPLIT = {   # per view: the torso's column range by row (arms are cut off outside it), and the hands' rows
     'q':    lambda y: (0, 60) if y <= 49 else (16, 34) if y <= 57 else (17, 35),
@@ -273,6 +319,8 @@ def main():
         V = view_parts(view)
         for k in ('face', 'cap', 'neck', 'torso'): parts[f'{view}.{k}'] = V[k]
         for name, g in leg_frames(view, V['legs']).items(): parts[f'{view}.legs.{name}'] = g
+        for side, frames in view_arm_frames(view, arms).items():
+            for name, g in frames.items(): parts[f'{view}.{side}.{name}'] = g
         for side in ('armA', 'armB'):
             if not V[side]: continue
             parts[f'{view}.{side}.down'] = V[side]

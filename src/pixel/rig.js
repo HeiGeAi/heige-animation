@@ -125,6 +125,58 @@ const PX_MOUTHS = {
   yawn:   { rows: ['.##.', '#MM#', '#MM#', '#MT#', '.##.'], dy: -2 },
 };
 
+// ---------- the same, in profile ----------
+// For a face seen side on, facing right: eyes fit a 3-pixel lens (top-left at the eye anchor), mouths are the front
+// half (their right edge at the face's front), brows are one short stroke. Same names as the front sets.
+const PX_EYES_SIDE = {
+  normal:     { look: true, blink: true, rows: ['@@', 'W@', '@@', '@@', '@@'] },
+  wide:       { dy: -1, look: true, blink: true, rows: ['@@', 'W@', 'W@', '@@', '@@', '@@'] },
+  shine:      { dy: -1, look: true, blink: true, rows: ['@@', 'W@', 'W@', '@@', '@W', '@@'] },
+  happy:      { dy: 1, rows: ['.@.', '@.@'] },
+  closed:     { dy: 2, rows: ['@.@', '.@.'] },
+  blink:      { dy: 3, rows: ['@@@'] },
+  sleepy:     { dy: 1, rows: ['@@@', '.@@', '.@@'] },
+  narrow:     { dy: 2, look: true, rows: ['@@', '@@'] },
+  angry:      { dy: 1, look: true, rows: ['@.', '@@', 'W@', '@@'] },
+  determined: { dy: 1, look: true, rows: ['@@', 'W@', '@@', '@@'] },
+  sad:        { dy: 1, look: true, rows: ['.@', '@@', 'W@', '@@'] },
+  teary:      { dy: 1, look: true, rows: ['.@', '@@', 'W@', '@@', 'YY'], rows2: ['.@', '@@', 'W@', '@@', 'WY'] },
+  cry:        { dy: 1, rows: ['@..', '.@@', '@..'] },
+  squeeze:    { dy: 1, rows: ['@..', '.@@', '@..'] },
+  scared:     { rows: ['@@@', '@WW', '@W@', '@WW', '@@@'] },
+  blank:      { rows: ['@@@', '@WW', '@WW', '@WW', '@@@'] },
+  dot:        { dy: 2, look: true, rows: ['@@', '@@'] },
+  x:          { dy: 1, rows: ['@.@', '.@.', '@.@'] },
+  heart:      { dy: 1, rows: ['R.R', 'RRR', '.$.'], rows2: ['...', 'R.R', '.$.'] },
+  spark:      { dy: 1, rows: ['.A.', 'AaA', '.A.'], rows2: ['...', '.a.', '...'] },
+  swirl:      { dy: 1, rows: ['@@@', '..@', '@@@'], rows2: ['@@@', '@..', '@@@'] },
+  red:        { look: true, rows: ['RR', 'WR', 'RR', 'RR', 'RR'] },
+  shades:     { shades: true, rows: [] },
+};
+PX_EYES_SIDE.look = PX_EYES_SIDE.normal;
+const PX_MOUTHS_SIDE = {
+  smile:  { rows: ['#..', '.##'] },
+  flat:   { rows: ['###'], dy: 1 },
+  frown:  { rows: ['.##', '#..'] },
+  o:      { rows: ['##', '##'] },
+  O:      { rows: ['.##', '#MM', '#MM', '.##'], dy: -1 },
+  grin:   { rows: ['###', '#tt', '#MM', '.##'], dy: -1 },
+  laugh:  { rows: ['####', '#ttt', '#MMM', '#MTT', '.###'], dy: -1 },
+  open:   { rows: ['.##', '#MM', '#MT', '.##'], dy: -1 },
+  wobble: { rows: ['.#.', '#.#'] },
+  cat:    { rows: ['#.#', '.#.'] },
+  smirk:  { rows: ['..#', '##.'] },
+  wail:   { rows: ['.###', '#MMM', '#MMM', '#MTT', '.###'], rows2: ['..##', '.#MM', '#MMM', '#MTT', '.###'], dy: -1 },
+  teeth:  { rows: ['####', '#tt#', '####'], dy: -1 },
+  tongue: { rows: ['#...', '.##.', '..TT'] },
+  pout:   { rows: ['.#', '#T', '.#'], dy: -1 },
+  yawn:   { rows: ['.##', '#MM', '#MM', '#MT', '.##'], dy: -2 },
+};
+const PX_BROWS_SIDE = {
+  normal: ['.@@@@', '@@@@.'], up: ['@@@@.', '....@'], angry: ['@@...', '.@@@@'], sad: ['...@@', '@@@@.'],
+  flat: ['.....', '@@@@@'], soft: ['.@@@.', '@...@'],
+};
+
 // ---------- emotes ----------
 // Pixel reaction marks (still no lettering). `top` ones sit over the head; the rest by its top corner. Each is one
 // or more frames picked by age, so the looping ones (zzz, hearts, stars, dots, steam, cloud) move on their own clock.
@@ -253,11 +305,11 @@ function pxFace(st, F, o, dx = 0, dy = 0) {
   const lx = Math.round(clamp(o.lookX || 0, -1, 1) * 1.6), ly = Math.round(clamp(o.lookY || 0, -1, 1) * 1.3);
   const blinking = ((tt * .9 + (o.seed || 0) * 1.7) % 3.3) < .1;
   const sq = o.squint || 0;
-  const n = F.eyes.length;
+  const n = F.eyes.length, EYES = F.eyeSet || PX_EYES, BROWS = F.browSet || PX_BROWS, MOUTHS = F.mouthSet || PX_MOUTHS;
   for (let i = 0; i < n; i++) {
-    let kind = kinds[Math.min(i, kinds.length - 1)] || 'normal', E = PX_EYES[kind] || PX_EYES.normal;
-    if (sq > .7 || (E.blink && blinking)) E = PX_EYES.blink;
-    else if (sq > .35 && E.look) E = PX_EYES.narrow;
+    let kind = kinds[Math.min(i, kinds.length - 1)] || 'normal', E = EYES[kind] || EYES.normal;
+    if (sq > .7 || (E.blink && blinking)) E = EYES.blink;
+    else if (sq > .35 && E.look) E = EYES.narrow;
     const mir = F.mirror[i], [ex, ey] = F.eyes[i], [lx0, ly0, lx1, ly1] = F.lenses[i];
     if (E.shades) {                                                  // the lenses go dark, with a glint
       for (let y = ly0; y <= ly1; y++) for (let x = lx0; x <= lx1; x++) if (st.has(x + dx, y + dy)) st.set(x + dx, y + dy, (x + y) % 2 && y > ly0 + 3 ? '&' : 'K');
@@ -275,7 +327,7 @@ function pxFace(st, F, o, dx = 0, dy = 0) {
     if (!F.clip) { x0 = clamp(x0, lx0, lx1 - w + 1); y0 = clamp(y0, ly0, ly1 - h + 1); }
     const clip = F.clip ? (x, y) => x - dx >= lx0 && x - dx <= lx1 && y - dy >= ly0 && y - dy <= ly1 : null;
     st.rows(rows, x0 + dx, y0 + dy, mir, clip);
-    if (kind === 'scared' && Math.floor(tt * 12) % 2) {             // the pupil trembles
+    if (kind === 'scared' && EYES === PX_EYES && Math.floor(tt * 12) % 2) {   // the pupil trembles
       const px = mir ? x0 + 1 : x0 + 3; st.set(x0 + 2 + dx, y0 + 2 + dy, 'W'); st.set(px + dx, y0 + 2 + dy, '@');
     }
   }
@@ -284,16 +336,16 @@ function pxFace(st, F, o, dx = 0, dy = 0) {
     const bn = o.brows || PX_BROW_OF[o.emo] || (kinds[0] === 'angry' || kinds[0] === 'determined' ? 'angry' : kinds[0] === 'sad' || kinds[0] === 'teary' ? 'sad' : 'normal');
     const pair = Array.isArray(bn) ? bn : [bn, bn];
     const bc = F.browClip ? (x, y) => x - dx >= F.browClip[0] && x - dx <= F.browClip[2] && y - dy >= F.browClip[1] && y - dy <= F.browClip[3] : null;
-    F.brows.forEach(([bx, by], i) => { const B = PX_BROWS[pair[Math.min(i, 1)]] || PX_BROWS.normal; st.rows(B, (F.mirror[i] ? bx - B[0].length + 1 : bx) + dx, by + dy, F.mirror[i], bc); });
+    F.brows.forEach(([bx, by], i) => { const B = BROWS[pair[Math.min(i, 1)]] || BROWS.normal; st.rows(B, (F.mirror[i] ? bx - B[0].length + 1 : bx) + dx, by + dy, F.mirror[i], bc); });
   }
   // mouth
   if (F.mouth && o.mouth !== null) {
     let m = o.mouth || (o.lid > .1 ? 'wail' : F.rest || 'smile');
     if (o.lid > .1) m = 'wail';
-    const M = PX_MOUTHS[m];
+    const M = MOUTHS[m];
     if (M) {
       const rows = (M.rows2 && Math.floor(tt * 6) % 2) ? M.rows2 : M.rows, w = rows[0].length;
-      const x0 = Math.floor((F.mouth[0] - w + 1) / 2), y0 = F.mouth[1] + (M.dy || 0);
+      const x0 = F.mouthRight != null ? F.mouthRight - w + 1 : Math.floor((F.mouth[0] - w + 1) / 2), y0 = F.mouth[1] + (M.dy || 0);
       const mc = F.mouthClip ? (x, y) => x - dx >= F.mouthClip[0] && x - dx <= F.mouthClip[1] : null;
       st.rows(rows, x0 + dx, y0 + dy, false, mc);
     }

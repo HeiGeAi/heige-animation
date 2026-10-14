@@ -29,7 +29,7 @@ def rowmap(brim_rows=(17, 18), cheek_row=37):
 
 VIEWS = {   # name: (file, rows repeated in the brim, cheek row, x shift)
     'front': ('v0', (17, 18), 37, 2),
-    'q':     ('v1', (17, 18), 37, 1),
+    'q':     ('v1', (11, 12), 37, 1),      # rows added up in the crown: repeating brim rows drew a double edge
     'side':  ('v2', (11, 12), 37, 4),
     'back':  ('v3', (15, 16), 33, 3),
 }

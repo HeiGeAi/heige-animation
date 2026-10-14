@@ -32,9 +32,10 @@ const HG_FACE = {
     brows: [[19, 24], [39, 24]], mouth: [58, 41], cheeks: [[19, 39], [37, 39]], forehead: [16, 22, 40, 27],
     tears: [[20, 39], [34, 39]], skinAt: hgSkin,
   },
-  side: {
-    eyes: [[34, 31]], lenses: [[35, 29, 37, 37]], mirror: [false], clip: true,
-    brows: [[31, 26]], browClip: [30, 26, 39, 27], mouth: [77, 41], mouthClip: [33, 40], cheeks: [[33, 39]],
+  side: {   // profile: its own stamp sets (rig.js PX_EYES_SIDE ...), the eye in the 3-pixel lens, the mouth at the front
+    eyes: [[35, 31]], lenses: [[35, 29, 37, 37]], mirror: [false], clip: true, eyeSet: PX_EYES_SIDE,
+    brows: [[33, 26]], browSet: PX_BROWS_SIDE, browClip: [30, 26, 39, 27],
+    mouth: [77, 40], mouthRight: 39, mouthSet: PX_MOUTHS_SIDE, cheeks: [[33, 39]],
     forehead: [27, 26, 39, 27], tears: [[35, 39]], skinAt: hgSkin,
   },
   back: null,
@@ -43,7 +44,7 @@ const HG_FACE = {
 // right: near = aL, on the screen's left in q); armL / armR = screen left and right arms (front and back).
 const HG_VIEWS = {
   front: ['legs', 'hair', 'neck', 'torso', 'face', 'FACE', 'cap', 'armL', 'armR'],
-  q:     ['armF', 'legs', 'neck', 'torso', 'face', 'FACE', 'cap', 'armN'],
+  q:     ['armF', 'legs', 'neck', 'torso', 'face', 'FACE', 'cap', 'armFfront', 'armN'],
   side:  ['legs', 'neck', 'torso', 'face', 'FACE', 'cap', 'armN'],
   back:  ['legs', 'neck', 'face', 'cap', 'torso', 'armL', 'armR'],
 };
@@ -88,14 +89,26 @@ function hgFrontArm(o, side) {
 const HG_STRIDE = [6, 3, 0, -3, -6, -3, 0, 3];
 const HG_LIFT = ['L1', 'L2', 'L1', '', 'R1', 'R2', 'R1', ''];
 
-// q / side / back arms: a walk swings them against the legs; otherwise a raised arm leans forward.
-function hgSideArm(view, part, o, q, near) {
-  let f = 'down';
-  if (q.step != null) {
+// Gestures made in front of the body: a far arm making one crosses in front of the torso instead of hiding behind it.
+const HG_FRONT_GESTURES = ['chin', 'cover', 'clasp', 'belly'];
+// q / side / back arms. Which of the option bag's arms drives a part: in q and side, armA is the near arm (aL, the way
+// clawd() has it facing right) and armB the far one; from the back, armA is on the screen's left: his left arm (aR).
+// Walking swings them against the legs; otherwise the same choice as the front: a pose by name, the emotion's
+// gesture, or a frame by angle. Frames a view doesn't draw (gestures in front of the body, seen from behind) hang.
+function hgViewArmName(view, part, o, q) {
+  const useL = view === 'back' ? part === 'armB' : part === 'armA';
+  const own = useL ? o.poseL : o.poseR;
+  if (!own && q.step != null) {
+    if (view === 'back') return 'down';
     const k = view === 'side' ? HG_STRIDE[q.step] : [2, 4, 2, 0, -2, -4, -2, 0][q.step];
-    f = Math.abs(k) < 2 ? 'down' : (k > 0) === near ? 'back' : 'fwd';
-  } else if ((near ? o.aL : o.aR) > .45) f = 'fwd';
-  return HG_P[`${view}.${part}.${f}`] || HG_P[`${view}.${part}.down`];
+    return Math.abs(k) < 2 ? 'down' : (k > 0) === (part === 'armA') ? 'back' : 'fwd';
+  }
+  const g = o.emo && !o.noPose && HG_EMO_ARMS[o.emo];
+  // in profile only the near arm shows, so it makes the emotion's gesture if its own is missing or hidden (belly)
+  const gest = !g ? null : view === 'side' ? (g[0] && g[0] !== 'belly' ? g[0] : g[1] || g[0]) : g[useL ? 0 : 1];
+  let f = own || gest || hgArmByAngle(useL ? (o.aL ?? .15) : (o.aR ?? .15));
+  if (f === 'wave') f = Math.floor(onTwos(T) * 4) % 2 ? 'waveB' : 'waveA';
+  return HG_P[`${view}.${part}.${f}`] ? f : 'down';
 }
 
 function hgLegs(view, q) {
@@ -116,14 +129,18 @@ function heigePx(x, y, o = {}) {
       case 'face': st.part(HG_P[view + '.face'], q.hx, q.hy); break;
       case 'FACE': pxFace(st, F, o, q.hx, q.hy); break;
       case 'cap': st.part(HG_P[view + '.cap'], q.hx, q.hy + q.cap); break;
-      case 'armN': st.part(hgSideArm(view, 'armA', o, q, true), q.tx, q.ty); break;
-      case 'armF': st.part(hgSideArm(view, 'armB', o, q, false), q.tx, q.ty); break;
+      case 'armN': st.part(HG_P[`${view}.armA.${hgViewArmName(view, 'armA', o, q)}`], q.tx, q.ty); break;
+      case 'armF': case 'armFfront': {
+        const f = hgViewArmName(view, 'armB', o, q), inFront = HG_FRONT_GESTURES.includes(f);
+        if (inFront === (layer === 'armFfront')) st.part(HG_P[`${view}.armB.${f}`], q.tx, q.ty);
+        break;
+      }
       case 'armL': case 'armR': {
         if (view === 'front') {
           const p = HG_P['front.arm.' + hgFrontArm(o, layer === 'armL' ? 'L' : 'R')];
           if (layer === 'armL') st.part(p, q.tx, q.ty);
           else { const m = new PxStack(); m.part(p); for (const [sx, sy, c] of m.each()) st.set(HGC.axis2 - sx + q.tx, sy + q.ty, c); }
-        } else st.part(HG_P[`${view}.${layer === 'armL' ? 'armA' : 'armB'}.down`], q.tx, q.ty);
+        } else { const part = layer === 'armL' ? 'armA' : 'armB'; st.part(HG_P[`${view}.${part}.${hgViewArmName(view, part, o, q)}`], q.tx, q.ty); }
         break;
       }
     }

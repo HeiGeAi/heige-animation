@@ -447,7 +447,7 @@ The same acting code (`EMO`, `feel()`, `emotions()`, `move()`, `turn()` in clawd
 
 ```bash
 node render.mjs --page=pixel.html --loop=pxActing --clip --fps=24 --out=out/pixel/acting.mp4     # the acting test
-node render.mjs --page=pixel.html --loop=pxHeigeEmotions --stills=1.6 --out=out/pixel/sheets     # 31 emotions
+node render.mjs --page=pixel.html --loop=pxHeigeEmotions --stills=1.6 --out=out/pixel/sheets     # 31 emotions (also ...Q, ...Side, ...Back)
 node render.mjs --page=pixel.html --loop=pxHeigeViews --strip=0:1 --fps=12 --out=out/check/walk.jpg   # views, walks, turn
 ```
 
@@ -460,10 +460,10 @@ node render.mjs --page=pixel.html --loop=pxHeigeViews --strip=0:1 --fps=12 --out
 | `dy`, `dx` | whole pixels, 4 per unit for 黑哥 (5 for Clawd) |
 | `sq` | a crouch or a stretch: the torso and head sink or rise a pixel or two; a big stretch lifts his cap (`capPop` 0..1 does it by hand) |
 | `rot` | a lean of up to 2 pixels at the head |
-| `aL`, `aR` | arm frames by angle: down, low, out, up, cheer. `poseL` / `poseR` pick a drawn gesture instead: point, waveA, waveB (`'wave'` alternates them), fistUp, hip, chin, belly, cover, scratch, clasp. Some emotions pick one themselves (`HG_EMO_ARMS`: proud = hands on hips, cry = fists on the eyes, thinking = hand on chin, idea = finger up) |
+| `aL`, `aR` | arm frames by angle: down, low, out, up, cheer. `poseL` / `poseR` pick a drawn gesture instead: point, waveA, waveB (`'wave'` alternates them), fistUp, hip, chin, belly, cover, scratch, clasp. Some emotions pick one themselves (`HG_EMO_ARMS`: proud = hands on hips, cry = fists on the eyes, thinking = hand on chin, idea = finger up). Every view has them: in 3/4 the far arm hides behind the torso unless its gesture crosses the body; in profile the near arm makes the emotion's gesture; from behind, gestures made in front of the body hang |
 | `walk` | eight drawings per stride cycle (one cycle = two steps); 28 px of travel per cycle looks planted |
 | `view`, `flip` | front, q, side, back (`qback` draws as back), all facing right; `flip` mirrors. `turn()` and `spinView()` step through them |
-| `eyes`, `mouth`, `brows` | stamps from `PX_EYES`, `PX_MOUTHS` and `PX_BROWS` in rig.js (every eye and mouth clawd.js has), inside his glasses; each emotion has a brow (`PX_BROW_OF`) |
+| `eyes`, `mouth`, `brows` | stamps from `PX_EYES`, `PX_MOUTHS` and `PX_BROWS` in rig.js (every eye and mouth clawd.js has), inside his glasses; the profile has its own sets (`PX_EYES_SIDE`, `PX_MOUTHS_SIDE`, `PX_BROWS_SIDE`); each emotion has a brow (`PX_BROW_OF`) |
 | `lookX`, `lookY`, `squint`, `blush`, `gloom`, `tint` | pupils move up to 2 pixels, squint closes the eyes, blush and gloom are drawn on the face, tint shifts the skin palette (disgust's green becomes lilac) |
 | `emote`, `emoteK`, `emoteAge` | pixel marks by the head (`PX_EMOTES`: all of clawd.js's), popping in a pixel high |
 

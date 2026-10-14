@@ -18,16 +18,17 @@
     }
   };
 
-  // All 31 emotions, alive (each with its own blink seed). Order follows EMO.
-  {
+  // All 31 emotions, alive (each with its own blink seed). Order follows EMO. One sheet per view:
+  // pxHeigeEmotions (front), pxHeigeEmotionsQ (three-quarters), pxHeigeEmotionsSide (profile), pxHeigeEmotionsBack.
+  for (const [loop, view] of [['pxHeigeEmotions', 'front'], ['pxHeigeEmotionsQ', 'q'], ['pxHeigeEmotionsSide', 'side'], ['pxHeigeEmotionsBack', 'back']]) {
     const names = Object.keys(EMO), cols = 8, cw = 64, ch = 120, gy = 104, cells = [];
     names.forEach((n, i) => cells.push([ZH[n] || n, cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy + 3, n]));
-    LOOPS.pxHeigeEmotions = t => {
+    LOOPS[loop] = t => {
       prect(0, 0, PW, PH, BG);
       for (let r = 0; r < 4; r++) { prect(0, ch * r + gy, PW, 1, FLOOR); prect(0, ch * r + gy + 1, PW, 1, FLOOR2); }
-      names.forEach((n, i) => heigePx(cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy, feel(n, onTwos(t), { seed: i })));
+      names.forEach((n, i) => heigePx(cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy, { ...feel(n, onTwos(t), { seed: i }), view }));
     };
-    Object.assign(LOOPS.pxHeigeEmotions, { len: 4, res: [cols * cw, 4 * ch], px: 4, overlay: labels(cells) });
+    Object.assign(LOOPS[loop], { len: 4, res: [cols * cw, 4 * ch], px: 4, overlay: labels(cells) });
   }
 
   // Every arm frame, for checking the drawings.

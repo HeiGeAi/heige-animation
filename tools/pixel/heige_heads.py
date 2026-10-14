@@ -88,6 +88,8 @@ def q_head(ai):
     g[(14, 31)] = 'O'; g[(13, 31)] = 'O'                                 # the near temple, back to the ear
     g[(30, 36)] = 'S'; g[(31, 36)] = 'S'; g[(31, 37)] = 'd'               # nose
     for (x, y) in ((16, 39), (16, 40), (17, 41)): g[(x, y)] = 'l'          # a light on the near cheek
+    for (x, y), c in list(g.items()):                                    # stray light specks on the cap's outline
+        if c in ('g', 'G') and y < 22 and any((x + dx, y + dy) not in g for dx, dy in N4): g[(x, y)] = 'O'
     return split_cap(g, lambda x: ob(x) if x <= 40 else 23)
 
 
@@ -138,9 +140,9 @@ BUNNY = ['.w.w.', '.w.w.', '.www.', 'wwwww', 'wOwOw', 'wwwww', '.www.']
 
 def bunny(g, x0, y0, stamp=True):
     """Clear the concept's logo (its whites, greys and the dark eye) to plain cap, then stamp the bunny if asked."""
-    for y in range(y0 - 1, y0 + 8):
+    for y in range(y0 - 1, y0 + 10):                 # two rows past the logo: the crown's repeated rows copy its foot
         for x in range(x0 - 1, x0 + 6):
-            if g.get((x, y)) in ('w', 'g', 'G', 'l') or (g.get((x, y)) in ('k', 'O') and y0 <= y <= y0 + 6 and x0 <= x <= x0 + 4): g[(x, y)] = 'c'
+            if g.get((x, y)) in ('w', 'g', 'G', 'l') or (g.get((x, y)) in ('k', 'O') and y0 <= y <= y0 + 8 and x0 <= x <= x0 + 4): g[(x, y)] = 'c'
     for j, row in enumerate(BUNNY if stamp else ()):
         for i, ch in enumerate(row):
             if ch != '.': g[(x0 + i, y0 + j)] = ch
