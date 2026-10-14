@@ -135,7 +135,9 @@ function setRes(pw, ph, px) {
 }
 function frameAt(t) {
   T = t;
-  const L = window.LOOP || LOOPS.default, [pw, ph] = (L && L.res) || [240, 135];
+  const L = window.LOOP || LOOPS.default;
+  if (L && L.film) { pxFilmFrame(L, t); return; }        // a film: shots and transitions (film.js)
+  const [pw, ph] = (L && L.res) || [240, 135];
   setRes(pw, ph, (L && L.px) || Math.round(W / pw));
   BUF.fill(0);
   if (L) L(t);
