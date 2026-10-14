@@ -72,18 +72,56 @@ function pxPanel(x, y, w, h, k = 1, fill = '#1C1B3A', rim = '#22A7D6') {
 }
 
 // Text over the pixels, positioned in logical pixels; drawn by pxTextFlush() in the loop's overlay at full resolution.
+// (ox, oy) is the logical pixel at the screen's top left, when a film camera has moved in.
 let PX_TEXTS = [];
 function pxText(txt, x, y, o = {}) { PX_TEXTS.push({ txt, x, y, ...o }); }
-function pxTextFlush(c, s) {
+function pxTextFlush(c, s, ox = 0, oy = 0) {
   c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
   for (const T of PX_TEXTS) {
     const size = Math.round((T.size || 8) * s);
     c.font = `${T.weight || 900} ${size}px "PingFang SC", "HarmonyOS Sans SC", sans-serif`;
     if (T.align) c.textAlign = T.align;
-    const x = T.x * s, y = T.y * s;
+    const x = (T.x - ox) * s, y = (T.y - oy) * s;
     if (T.stroke !== false) { c.lineWidth = Math.max(4, size * .18); c.strokeStyle = T.strokeColor || '#0E0B1E'; c.strokeText(T.txt, x, y); }
     c.fillStyle = T.color || '#FFFFFF'; c.fillText(T.txt, x, y);
     c.textAlign = 'center';
   }
   PX_TEXTS = [];
+}
+
+// Light over the pixels, drawn at full resolution like the text (the pixels stay hard, the light is soft):
+//   spot   { x, y0, y1, w0, w1, a, col }  a stage light's cone from y0 down to a pool on the floor at y1
+//   glow   { x, y, r, a, col }            a soft halo behind something precious
+//   vig    { k }                          darkened corners
+//   tint   { col, a }                     the whole frame washed with a colour (a hit of red, a cold blue)
+// Scenes push with pxFx() while drawing; film.js flushes after the pixels and before the text.
+let PX_FX = [];
+function pxFx(o) { PX_FX.push(o); }
+const fxRGBA = (hex, a) => { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, a))})`; };
+function pxFxFlush(c, s, ox = 0, oy = 0) {
+  const X = x => (x - ox) * s, Y = y => (y - oy) * s;
+  for (const F of PX_FX) {
+    c.save();
+    if (F.type === 'spot') {
+      const col = F.col || '#FFE9B8', a = F.a ?? .32, x = X(F.x), y0 = Y(F.y0 ?? -10), y1 = Y(F.y1), w0 = (F.w0 ?? 14) * s / 2, w1 = (F.w1 ?? 70) * s / 2;
+      c.globalCompositeOperation = 'screen'; c.filter = `blur(${Math.round(s * 2.2)}px)`;
+      const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, fxRGBA(col, a)); g.addColorStop(1, fxRGBA(col, a * .45));
+      c.fillStyle = g; c.beginPath(); c.moveTo(x - w0, y0); c.lineTo(x + w0, y0); c.lineTo(x + w1, y1); c.lineTo(x - w1, y1); c.closePath(); c.fill();
+      const p = c.createRadialGradient(x, y1, 0, x, y1, w1 * 1.1); p.addColorStop(0, fxRGBA(col, a * 1.1)); p.addColorStop(1, fxRGBA(col, 0));
+      c.fillStyle = p; c.setTransform(1, 0, 0, .22, 0, y1 * .78); c.beginPath(); c.arc(x, y1, w1 * 1.1, 0, Math.PI * 2); c.fill();
+    } else if (F.type === 'glow') {
+      c.globalCompositeOperation = 'screen';
+      const x = X(F.x), y = Y(F.y), r = F.r * s, g = c.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, fxRGBA(F.col || '#FFD86A', F.a ?? .5)); g.addColorStop(1, fxRGBA(F.col || '#FFD86A', 0));
+      c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+    } else if (F.type === 'vig') {
+      const W = c.canvas.width, H = c.canvas.height, g = c.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, H * 1.05);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(6,2,6,${F.k ?? .6})`);
+      c.fillStyle = g; c.fillRect(0, 0, W, H);
+    } else if (F.type === 'tint') {
+      c.globalAlpha = F.a ?? .2; c.fillStyle = F.col; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
+    }
+    c.restore();
+  }
+  PX_FX = [];
 }
