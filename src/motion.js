@@ -3,7 +3,10 @@
 // (pixel/core.js) both load it, and the same acting code (EMO, feel(), emotions(), move(), turn() in clawd.js) drives either.
 // Length and rhythm come from PROJECT in config.js.
 const W = 1920, H = 1080;
-const BPM = PROJECT.bpm, BEAT = 60 / BPM, OFF = PROJECT.offset || 0, DUR = PROJECT.duration;
+let BPM = PROJECT.bpm, BEAT = 60 / BPM, OFF = PROJECT.offset || 0;
+const DUR = PROJECT.duration;
+// a loop or film with its own music can set its tempo (the pixel engine does it from loop.tempo = [bpm, offset])
+function setTempo(bpm = PROJECT.bpm, offset = PROJECT.offset || 0) { BPM = bpm; BEAT = 60 / bpm; OFF = offset; }
 const TAU = Math.PI * 2;
 const PAL = {
   paper: '#F3EBDC', ink: '#2B2233', clay: '#D97757', clayDk: '#A84D33', clayLt: '#F2A283',

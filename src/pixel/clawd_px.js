@@ -2,7 +2,8 @@
 // arm nubs and the tall eyes are built from rectangles each frame (Clawd is simple enough not to need drawn parts);
 // moods swap the eyes and mouth from small stamp sets, and whole-pixel offsets do the bouncing, crouching and lifting.
 //   clawdPx(170, 107, { ...feel('happy', onTwos(t)), flip: true });
-// (x, y) = the ground point between his feet. Front view only (q / side / back draw as front).
+// (x, y) = the ground point between his feet. Views: front, q (eyes toward the heading), side (facing right), back;
+// flip mirrors, as for clawd().
 
 const CPX = {
   pal: { O: '#3A1C17', B: '#D97757', S: '#B85C3F', D: '#9A4A33', L: '#EB9273', H: '#F7BEA0', E: '#24161A', G: '#FFF1E2', M: '#5A2430' },
@@ -37,6 +38,30 @@ function clawdPx(x, y, o = {}) {
   let step = null; if (o.walk != null) step = ((Math.floor(o.walk * 4) % 4) + 4) % 4;
   const by = crouch;                                     // the body sinks into a crouch (legs hide under it)
   const R = (x0, y0, w, h, c, ring = 'O') => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) st.set(x0 + i, y0 + j, (i === 0 || j === 0 || i === w - 1 || j === h - 1) && ring ? ring : c); };
+  const view = o.view === 'qback' ? 'back' : o.view || 'front';
+  if (view === 'side') {                                 // profile, facing right: a narrower block, one eye, one arm
+    const sw = step == null ? 0 : step === 0 ? 3 : step === 2 ? -3 : 0;
+    [[-9, sw, 'far'], [7, -sw, 'far'], [-11, -sw, 'near'], [5, sw, 'near']].forEach(([lx, k, which]) => {
+      const lift = k > 0 ? 2 : 0;
+      R(lx + k, -14 - lift, 5, 14, which === 'far' ? 'S' : 'D');
+    });
+    R(-15, -41 + by, 30, 31, 'B');
+    for (let i = -14; i < 14; i++) { st.set(i, -40 + by, 'L'); st.set(i, -39 + by, 'L'); st.set(i, -14 + by, 'S'); st.set(i, -13 + by, 'S'); st.set(i, -12 + by, 'D'); }
+    for (let j = -38; j < -14; j++) { st.set(-14, j + by, 'S'); st.set(-13, j + by, 'S'); }
+    for (let i = -9; i < -3; i++) st.set(i, -39 + by, 'H');
+    const a = o.aL ?? .15, nub = (x0, y0, w, h) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) st.set(x0 + i, y0 + j + by, i === 0 || j === 0 || i === w - 1 || j === h - 1 ? 'O' : 'B'); };
+    if (a > 1.05) { nub(8, -45, 6, 6); nub(7, -40, 6, 7); } else if (a > .35) nub(13, -31, 8, 6); else nub(-3, -26, 6, 7);
+    const k = Array.isArray(o.eyes) ? o.eyes[1] : o.eyes === 'wink' ? 'normal' : o.eyes || 'normal';
+    const blinkS = ((onTwos(T) * .9 + (o.seed || 0) * 1.7) % 3.3) < .1;
+    if (k === 'shades') { for (let i = 2; i < 15; i++) for (let j = -35; j < -29; j++) st.set(i, j + by, j === -35 ? 'O' : 'K'); }
+    else st.rows(CPX_EYES[(o.squint || 0) > .7 || (blinkS && ['normal', 'look', 'wide', 'shine'].includes(k)) ? 'blink' : k] || CPX_EYES.normal, 5, -35 + by);
+    const ms = PX_MOUTHS_SIDE[o.mouth]; if (ms) st.rows(ms.rows, 13 - ms.rows[0].length + 1, -22 + by + (ms.dy || 0));
+    const flipS = !!o.flip, wxs = x + dx, wys = y + dy;
+    if (!o.noShadow) hgShadow(x + dx, y, o.dy || 0, 18);
+    pxDrawStack(st, wxs, wys, CPX, flipS, pxSkin(CPX, o), false);
+    if (o.emote) { const E = PX_EMOTES[o.emote] || {}, dir = flipS ? -1 : 1; pxEmote(o.emote, E.top ? wxs : wxs + dir * 18 - (flipS ? 6 : 0), wys - 42 + (E.top ? -2 : 0) + by, o.emoteK ?? 1, o.emoteAge ?? T, dir); }
+    return;
+  }
   // legs: a walk lifts the diagonal pairs in turn
   [-21, -10, 5, 16].forEach((lx, i) => {
     const lift = step == null ? 0 : (step === 0 && i % 2 === 0) || (step === 2 && i % 2 === 1) ? 2 : 0;
@@ -57,14 +82,17 @@ function clawdPx(x, y, o = {}) {
     else box(-30, -26, 6, 7);
   };
   arm(o.aL ?? .15, -1); arm(o.aR ?? .15, 1);
-  // eyes and mouth
+  if (view === 'q') for (let j = -38; j < -15; j++) for (let i = -24; i < -18; i++) st.set(i, j + by, 'S');
+  // eyes and mouth (none from behind)
+  if (view === 'back') o = { ...o, eyes: 'none', mouth: null, blush: 0 };
+  const qs = view === 'q' ? 4 : 0;
   const kinds = Array.isArray(o.eyes) ? o.eyes : o.eyes === 'wink' ? ['happy', 'normal'] : [o.eyes || 'normal', o.eyes || 'normal'];
   const blink = ((onTwos(T) * .9 + (o.seed || 0) * 1.7) % 3.3) < .1;
   const lx = Math.round(clamp(o.lookX || 0, -1, 1) * 2), ly = Math.round(clamp(o.lookY || 0, -1, 1) * 2);
   if (kinds[0] === 'shades') {
     for (let i = -18; i < 18; i++) for (let j = -35; j < -28; j++) st.set(i, j + by, j === -35 ? 'O' : 'K');
     st.set(-15, -33 + by, 'W'); st.set(-14, -34 + by, 'W'); st.set(9, -33 + by, 'W'); st.set(10, -34 + by, 'W');
-  } else [[-14, false], [10, true]].forEach(([ex, mir], i) => {
+  } else if (kinds[0] !== 'none') [[-14 + qs, false], [10 + qs, true]].forEach(([ex, mir], i) => {
     let k = kinds[Math.min(i, kinds.length - 1)];
     if ((o.squint || 0) > .7 || (blink && ['normal', 'look', 'wide', 'shine'].includes(k))) k = 'blink';
     const rows = CPX_EYES[k] || CPX_EYES.normal, w = rows[0].length;
@@ -73,7 +101,7 @@ function clawdPx(x, y, o = {}) {
     st.rows(rows, x0, -35 + by + (look ? ly : 0), mir);
   });
   const m = PX_MOUTHS[o.mouth];
-  if (m) { const rows = m.rows, w = rows[0].length; st.rows(rows, Math.floor((-1 - w + 1) / 2), -22 + by + (m.dy || 0)); }
+  if (m) { const rows = m.rows, w = rows[0].length; st.rows(rows, Math.floor((-1 - w + 1) / 2) + qs, -22 + by + (m.dy || 0)); }
   if ((o.blush || 0) > .2) for (const cx of [-19, 18]) st.rows(['PPPP'], cx - 2, -24 + by);
   // to the buffer, with a shadow and the mood's tint on the body
   const flip = !!o.flip, wx = x + dx, wy = y + dy;

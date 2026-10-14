@@ -41,6 +41,8 @@ const PX_ICONS = {
            '...ORO......', '..ORO.......', '.ORO........', 'ORO.........', 'OO..........'],
   chip:   ['..O.O..O.O..', '.OOOOOOOOOO.', 'OOKKKKKKKKOO', '.OKCCCCCCKO.', 'OOKCOOOOCKOO', '.OKCOAAOCKO.', 'OOKCOAAOCKOO',
            '.OKCOOOOCKO.', 'OOKCCCCCCKOO', '.OKKKKKKKKO.', '.OOOOOOOOOO.', '..O.O..O.O..'],
+  star:   ['......O......', '.....OAO.....', '.....OAO.....', '....OAaAO....', 'OOOOOAaAOOOOO', 'OAAAAaaaAAAAO', '.OAAaaWaaAAO.',
+           '..OAAaaaAAO..', '...OAAAAAO...', '..OAAAOAAAO..', '..OAAO.OAAO..', '.OAAO...OAAO.', '.OOO.....OOO.'],
   check:  ['............', '..........OO', '.........OCO', '........OCO.', '.......OCO..', 'OO....OCO...', 'OCO..OCO....',
            '.OCOOCO.....', '..OCCO......', '...OO.......', '............', '............'],
   cross:  ['............', '.OO......OO.', 'ORRO....ORRO', '.ORRO..ORRO.', '..ORROORRO..', '...ORRRRO...', '...ORRRRO...',
