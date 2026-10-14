@@ -87,6 +87,15 @@
     heigeSprite({ wave, blink: frac(t / 3.3 + .4) < .04 }).draw(120, GROUND);
   });
   LOOPS.pxHeige.len = 4;
+  // The four 黑哥 directions from the design concepts (design/), each on the same hill, for choosing.
+  for (const key of ['hgChibi', 'hgStreet', 'hgRPG', 'hgBlock']) {
+    LOOPS['px_' + key] = t => scene(t, t => {
+      const S = window.SPRITES && SPRITES[key]; if (!S) return;
+      shadowAt(120, 15);
+      gridSprite(S.rows, S.pal).draw(120, GROUND);
+    });
+    LOOPS['px_' + key].len = 4;
+  }
   // Both sprites big on a flat ground, for inspecting them pixel by pixel.
   LOOPS.pxSprites = t => {
     prect(0, 0, PW, PH, '#2B2A55');

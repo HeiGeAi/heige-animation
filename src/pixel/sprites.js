@@ -211,3 +211,13 @@ function heigeSprite(o = {}) {
   if (o.rim !== false) sp.rim([HP.J, HP.J2, HP.JS, HP.C, HP.C2, HP.CD, HP.Hd, HP.P], HP.RIM, HP.O);
   return sp;
 }
+
+// ---------- sprites from a text grid ----------
+// rows: strings, one character per pixel ('.' = transparent); pal: { char: '#rrggbb' }. The origin is the ground
+// point between the feet: by default the bottom row's centre, so `draw(x, groundY)` stands the sprite on the ground.
+function gridSprite(rows, pal, ox = null, oy = null) {
+  const sp = new Spr(), h = rows.length, w = Math.max(...rows.map(r => r.length));
+  ox = ox ?? Math.floor(w / 2); oy = oy ?? h;
+  rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) { const c = pal[r[x]]; if (c) sp.set(x - ox, y - oy, c); } });
+  return sp;
+}
