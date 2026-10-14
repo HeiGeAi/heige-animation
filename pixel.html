@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pixel animation base</title>
+<style>
+  html, body { margin: 0; background: #14131c; }
+  #out { width: min(100vw, 1280px); aspect-ratio: 16 / 9; height: auto; image-rendering: pixelated; display: block; }
+</style>
+</head>
+<body>
+<canvas id="out" width="1920" height="1080"></canvas>
+<!-- the pixel back end: same render protocol as studio.html (renderAt / renderSheet / LOOPS), no p5 -->
+<script src="src/config.js"></script>
+<script src="src/pixel/core.js"></script>
+<script src="src/pixel/sprites.js"></script>
+<script src="src/pixel/scene.js"></script>
+</body>
+</html>
