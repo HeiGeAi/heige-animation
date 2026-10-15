@@ -26,6 +26,7 @@ function pxGame(D) {
   const vlen = s => [...s].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2E80 ? 1 : ch === ' ' ? .35 : .62), 0);
   const hg = (x, y, o = {}) => heigePx(Math.round(x), Math.round(y), o);
   const cl = (x, y, o = {}) => clawdPx(Math.round(x), Math.round(y), o);
+  const ds = (x, y, o = {}) => modelPx('deepseek', Math.round(x), Math.round(y), o);   // DeepSeek, from the locked roster
   const feelT = (name, t, extra = {}) => ({ ...feel(name, onTwos(t)), ...extra });
   const emo = (t, keys, extra = {}) => ({ ...emotions(onTwos(t), keys.filter(k => k[0] != null), { take: .8 }), ...extra });
   const icon = (n, cx, cy, s = 2, tint) => pxIcon(n, Math.round(cx - 6 * s), Math.round(cy - 6 * s), s, tint);
@@ -198,7 +199,7 @@ function pxGame(D) {
   };
   return {
     at, after, since, R, GOLD, GOLDL, GOLDD, INK, CARD, CREAM, RED, PINK, SKY,
-    vgrad, box, out3, pop, over, kick, ramp, vlen, hg, cl, feelT, emo, icon, typing, walker, sparkle,
+    vgrad, box, out3, pop, over, kick, ramp, vlen, hg, cl, ds, feelT, emo, icon, typing, walker, sparkle,
     frame, chip, chipL, stamp, card,
     spot, curtain, curtainCloth, darkStage, sunburst, hall, pedestal, office, desk, bedroom, serverRoom, examHall, examDesks, bar, barTop, street, npc, hp, cloud, charCard,
     shot, push, title, film,
