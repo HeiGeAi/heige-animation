@@ -633,34 +633,114 @@
     chip('打工人 × AI', 170, 40, GOLDL, 9);
     if (after(t, '感谢关注')) fx2Stream('heart', t, { x: 1000, y: 1000, w: 1400, h: 900, n: 30 });
   }, { grade: 'warm', bloom: .5, in: { type: 'dissolve', dur: .35 }, cam: push(170, 100, 1.1, 1.25) });
-  shot('下一期咱们聊聊', (lt, t) => {
-    hall(t); stageFx(t);
-    frame(80, 24, 160, 110, { title: '下期', fill: '#1A1C30' });
-    cl(130, 116, { ...feelT('nervous', t), noShadow: true }); chip('码农朋友', 130, 44, CREAM, 6);
-    if (after(t, '码农明知道这行邪门')) chip('邪门', 200, 60, PINK, 8);
-    fx2Shine(480, 144, 1440, 804, (lt - .4) / .8);
-    slam('舍不得走？', t, '舍不得走', { size: 130, y: 880, pal: 'gold', stagger: .05 });
-  }, { grade: 'neon', in: { type: 'zoom', dur: .45 }, cam: push(160, 80, 1.05, 1.25) });
-  shot('喜欢的话点赞收藏不迷路', (lt, t) => {
-    curtain(t, 1); spot(160, t, { w: 110 }); stageFx(t);
-    [['heart', 100, '点赞'], ['star', 160, '收藏'], ['bolt', 220, '转发']].forEach(([ic, x, w], i) => { const k = pop(lt - i * .5, .3); if (k <= 0) return; const y = Math.round(lerp(150, 60, k) + Math.sin(t * 3 + i) * 2); icon(ic, x, y, 3); pxFx({ type: 'glow', x, y, r: 24, a: .45 }); chip(w, x, y + 26, GOLDL, 7); fx2Burst('star', lt - i * .5, { at: [x, y], n: 16, speed: 600, life: .9 }); });
-    if (after(t, '转 FDE 的朋友')) chip('转发给想转 FDE 的朋友', 160, 30, CREAM, 7);
-    cl(270, FLOOR, { ...feelT('happy', t), aR: 1.3 });
-  }, { grade: 'gold', bloom: .55, in: { type: 'dissolve', dur: .35 }, cam: push(160, 92, 1.05, 1.15) });
-  shot('我是黑哥', (lt, t) => {
-    const end = D.len - t, close = end < 1.8 ? 1 - end / 1.8 : 0;
-    curtain(t, 1); spot(160, t, { w: 100 }); stageFx(t, { n: 18, a: .18 });
-    hg(130, FLOOR, { ...emo(t, [[0, 'happy'], [at('只说真话'), 'cool']]), poseR: after(t, '只说真话') ? 'fistUp' : 'wave' });
-    cl(210, FLOOR, feelT('happy', t));
-    if (after(t, '不吹 AI')) chip('不吹 AI 也不恐惧 AI', 170, 40, GOLDL, 7);
-    curtainCloth(t, 1 - close);
-    if (after(t, '只说真话')) stamp('只说真话', 170, 70, since(t, '只说真话'), 9);
-    burst('confetti', t, '只说真话', { x: 960, y: 300, n: 90, speed: 1500, life: 2.4 });
-    fx2Rays(960, -60, t, { a: .2 });
-  }, { grade: 'warm', bloom: .55, in: { type: 'iris', dur: .4 }, cam: (lt, t) => [170, 100, ramp(t, [[at('我是黑哥'), 1.1], [D.len - 1.8, 1.2], [D.len - .3, 1.02]])] });
+  // ================= 下一关：像素闯关结尾（卡 BGM）=================
+  // From 6:15 the music comes in and the stage turns into a blocky voxel level (a mesa and nether palette: no grass,
+  // no green). The song (140 BPM, a bar is 1.714 s) starts at MUS; its bars and beats drive every cut, jump, hit and
+  // burst. Bars after the start of the song: 0.987 + n × 1.7136 s; the drop is bar 4 (7.84 s); it ends at 13.95 s.
+  const MUS = 375.6, BEAT = 60 / 140, BAR = BEAT * 4, B0 = .987;
+  const mu = t => t - MUS, barT = n => B0 + n * BAR;
+  const beatPh = u => { const b = (u - B0) / BEAT; return b < 0 ? 9 : (b - Math.floor(b)) * BEAT; };   // seconds since the last beat
+  const BS = 10;
+  const block = (x, y, kind, t = 0) => {
+    const K = { sand: ['#E8B860', '#FFD890', '#B88A48'], terra: ['#C8643C', '#E8865A', '#8A3A2A'], terra2: ['#E89A5A', '#FFC08A', '#B8643C'], deep: ['#8A3A2A', '#A85038', '#5A2018'],
+      stone: ['#6A6470', '#8A8490', '#4A4450'], gold: ['#FFD34E', '#FFF1C9', '#C8922A'], obsid: ['#2A1A3A', '#4A2A5A', '#140A1E'], lava: ['#FF7A2A', '#FFD86A', '#C83A1A'], q: ['#E8A93A', '#FFD86A', '#8A5A22'] }[kind];
+    x = Math.round(x); y = Math.round(y);
+    R(x, y, BS, BS, K[0]); R(x, y, BS, 1, K[1]); R(x, y, 1, BS, K[1]); R(x, y + BS - 1, BS, 1, K[2]); R(x + BS - 1, y, 1, BS, K[2]);
+    if (kind === 'lava') { for (let i = 0; i < 4; i++) pset(x + 1 + Math.floor(hash(i + Math.floor(t * 6) + x) * 8), y + 1 + Math.floor(hash(i * 3 + x) * 8), K[1]); return; }
+    if (kind === 'q') { pxText('?', x + 5, y + 5, { size: 7, color: '#5A2A10', stroke: false }); return; }
+    if (kind === 'gold') { pset(x + 2, y + 2, '#FFFFFF'); pset(x + 6, y + 5, K[1]); return; }
+    for (let i = 0; i < 3; i++) pset(x + 2 + Math.floor(hash(x * 7 + y + i) * 6), y + 2 + Math.floor(hash(x + y * 3 + i) * 6), K[2]);
+  };
+  // the level, in world x: flat ground at FLOOR, a lava pit at 200..240, three ? blocks, a beacon at 340, a gold road
+  // from 360, a podium at 440..470, a portal at 490
+  const levelAt = (u, X) => {
+    vgrad(0, PW, 0, PH, [[0, '#1E0E36'], [90, '#8A3A5A'], [PH, '#FF9A5A']]);
+    const fallIn = c => { const ti = -.25 + ((c * BS - X) / PW) * 1.05, k = clamp((u - ti) / .22); return k >= 1 ? 0 : Math.round((1 - k * k) * -170); };
+    R(250 - Math.round(X * .05), 26, 22, 22, '#FFD890'); R(253 - Math.round(X * .05), 29, 16, 16, '#FFF1C9');
+    for (let i = 0; i < 6; i++) { const cx = ((i * 90 - X * .15 - u * 6) % 520 + 520) % 520 - 60; R(Math.round(cx), 30 + (i % 3) * 14, 40, 6, '#F4D8D0'); R(Math.round(cx) + 8, 24 + (i % 3) * 14, 22, 6, '#F4D8D0'); }
+    for (let i = 0; i < 14; i++) { const cx = Math.round(((i * 46 - X * .35) % 640 + 640) % 640 - 60), h = 30 + Math.round(hash(i + 3) * 40); for (let k = 0; k < h; k += 6) R(cx, FLOOR - h + k, 40, 6, k % 12 ? '#7A3040' : '#8A3A48'); }
+    const c0 = Math.floor(X / BS) - 1;
+    for (let c = c0; c < c0 + 34; c++) {
+      const wx = c * BS, sx = wx - X, pitc = wx >= 200 && wx < 240, road = wx >= 360 && wx < 480;
+      const fy = fallIn(c); if (fy < -160) continue;
+      for (let r = 0; r < 4; r++) { const y = FLOOR + r * BS + fy; if (pitc && r === 0) { block(sx, y + 4, 'lava', u); continue; } block(sx, y, road && r === 0 ? 'gold' : r === 0 ? 'sand' : r === 1 ? 'terra' : r === 2 ? 'terra2' : 'deep', u); }
+      if (pitc) pxFx({ type: 'glow', x: sx + 5, y: FLOOR + 4, r: 14, a: .25, col: '#FF7A2A' });
+    }
+    // podium and portal
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3 - (r ? 1 : 0); c++) block(440 + c * BS + (r ? 5 : 0) - X, FLOOR - (r + 1) * BS, 'gold', u);
+    const px = 495 - X; for (let r = 0; r < 7; r++) { block(px, FLOOR - (r + 1) * BS, 'obsid'); block(px + 40, FLOOR - (r + 1) * BS, 'obsid'); }
+    for (let c = 0; c < 5; c++) { block(px + c * BS, FLOOR - 8 * BS, 'obsid'); }
+    for (let yy = FLOOR - 70; yy < FLOOR; yy++) for (let xx = px + BS; xx < px + 40; xx++) pset(xx, yy, Math.sin(xx * .4 + yy * .3 - u * 6) > .2 ? '#9A5AE8' : Math.sin(xx * .2 - yy * .5 + u * 4) > 0 ? '#6A3AB8' : '#C8A0FF');
+    pxFx({ type: 'glow', x: px + 25, y: FLOOR - 35, r: 40, a: .35, col: '#B080FF' });
+  };
+  // Clawd's run through the level: x keys and jumps (a jump peaks on its beat)
+  const clX = u => ramp(u, [[barT(0), 60], [barT(1), 60], [barT(1) + 1.25, 190], [barT(2), 190], [barT(2) + .45, 250], [barT(3), 250], [barT(3) + BEAT, 280], [barT(3) + BEAT * 2, 310], [barT(5), 310], [barT(5) + 1.5, 425], [barT(6), 425]]);
+  const clDY = u => { let dy = 0; const arc = (t0, t1, h) => { if (u > t0 && u < t1) dy = Math.min(dy, -Math.sin((u - t0) / (t1 - t0) * Math.PI) * h); };
+    if (u < barT(0) + .3) dy = -Math.max(0, (barT(0) - u)) * 260;                         // drops in from the sky onto bar 0
+    arc(barT(2) - .05, barT(2) + .45, 34);                                              // over the lava
+    for (let k = 0; k < 3; k++) arc(barT(3) + k * BEAT - .2, barT(3) + k * BEAT + .2, 16);   // head-butting the ? blocks
+    if (u >= barT(4)) { const p = beatPh(u); dy = Math.min(dy, -Math.round(Math.sin(Math.min(1, p / (BEAT * .8)) * Math.PI) * 6)); }   // bouncing on every beat after the drop
+    return dy; };
+  shot('感谢关注', (lt, t) => {
+    const u = mu(t), X = Math.max(0, Math.min(400, clX(u) - 120));
+    if (u < -.2) { curtain(t, 1); spot(160, t); hg(130, FLOOR, feelT('happy', t)); cl(210, FLOOR, feelT('happy', t)); return; }
+    levelAt(u, X);
+    // world building: before the music lands, the ground drops in block by block
+    if (u < .1) { const k = clamp((u + .25) / .35); fx2push(2, c => { c.save(); c.fillStyle = `rgba(18,10,30,${1 - k})`; c.fillRect(0, 0, 1920, 1080); c.restore(); }); }
+    for (let c = Math.floor(X / BS) - 1; c < Math.floor(X / BS) + 33; c++) { const ti = -.25 + ((c * BS - X) / PW) * 1.05; const l = u - ti - .22; if (l >= 0 && l < .5) fx2Burst('dust', l, { at: [c * BS - X + 5, FLOOR], n: 3, speed: 260, arc: 2.4, life: .45, seed: c }); }
+    // ? blocks and what they hold
+    [['heart', 250, '点赞'], ['star', 280, '收藏'], ['bolt', 310, '转发']].forEach(([ic, wx, w], i) => {
+      const hit = u - (barT(3) + i * BEAT), y = FLOOR - 70 - (hit > 0 && hit < .15 ? 3 : 0);
+      block(wx - 5 - X, y, hit >= 0 ? 'stone' : 'q', u);
+      if (hit >= 0 && u < barT(4)) { const k = pop(hit, .25), iy = y - 12 - Math.round(k * 10) + Math.round(Math.sin(t * 4 + i) * 2); icon(ic, wx - X, iy, 2); chip(w, wx - X, iy - 16, GOLDL, 5.5); if (hit < .06) fx2Hit(.45); fx2Burst('star', hit, { at: [wx - X, y], n: 14, speed: 600, life: .8 }); }
+      if (u >= barT(4)) fx2Burst('star', u - barT(4), { at: [wx - X, y - 24], n: 16, speed: 700, life: .7, seed: i + 9 });
+    });
+    // the beacon at the drop: a column of light into the sky
+    const drop = u - barT(4);
+    if (drop >= 0) { block(340 - 5 - X, FLOOR - BS, 'gold', u); const bx = 340 - X; for (let yy = 0; yy < FLOOR - BS; yy++) { const w = 3 + Math.round(Math.sin(yy * .2 - t * 10) * 1); R(bx - w, yy, w * 2, 1, yy % 4 ? '#FFF1C9' : '#FFD86A'); } pxFx({ type: 'glow', x: bx, y: 40, r: 50, a: .5, col: '#FFE9A0' }); }
+    // 黑哥 lands at the drop and keeps the beat with Clawd
+    const hgx = drop < 0 ? null : ramp(u, [[barT(4), 370], [barT(5), 370], [barT(5) + 1.5, 455], [barT(6), 455]]) - X;
+    if (hgx != null) { const fall = Math.max(0, .25 - drop) * 400, p = beatPh(u), dy = -Math.round(Math.sin(Math.min(1, p / (BEAT * .8)) * Math.PI) * 5) - fall, onPod = u >= barT(5) + 1.5; hg(hgx, (onPod ? FLOOR - 3 * BS : FLOOR) + dy, { ...emo(t, [[0, 'excited'], [at('只说真话'), 'cool']]), poseR: u >= barT(6) ? (after(t, '只说真话') ? 'fistUp' : 'wave') : 'cheer', poseL: 'cheer' }); }
+    const cx = clX(u) - X, cdy = clDY(u), run = Math.abs(clX(u) - clX(u - .05)) > .3;
+    cl(cx, FLOOR + cdy, run ? { ...feelT('excited', t), view: 'side', walk: clX(u) / 8 } : emo(t, [[0, 'excited'], [at('舍不得走'), 'sad'], [at('喜欢的话点赞收藏不迷路'), 'happy'], [at('只说真话'), 'love']], u > barT(2) + .45 && u < barT(3) - .2 ? { lookX: -1 } : {}));
+    if (Math.abs(u - barT(0)) < .04) fx2Hit(.6);
+    fx2Burst('dust', u - barT(0), { at: [60 - X, FLOOR], n: 14, speed: 500, arc: 2.6, life: .8 });
+    fx2Burst('ember', u - barT(2), { at: [220 - X, FLOOR], n: 30, speed: 500, life: 1.2 });
+    // coins on every beat of the run (bar 1) and along the gold road (bar 5)
+    if ((u > barT(1) && u < barT(2)) || (u > barT(5) && u < barT(6))) { const p = beatPh(u); fx2Burst('coin', p, { at: [cx, FLOOR - 40], n: 4, speed: 700, life: .6, seed: Math.floor((u - B0) / BEAT) }); }
+    // the riser before the drop: shake, speed lines, the screen whitening
+    if (u > barT(3) + BEAT * 2.4 && u < barT(4)) { const k = (u - barT(3) - BEAT * 2.4) / (barT(4) - barT(3) - BEAT * 2.4); kick(0, 1 + k * 3, .1); fx2Speed(960, 540, t, k); fx2Flash(k * k * .22); }
+    // the drop: a white flash, fireworks on every beat, confetti, STAGE CLEAR
+    if (drop >= 0) {
+      if (drop < .1) fx2Flash(1 - drop * 10);
+      fx2Burst('confetti', drop, { x: 960, y: 300, n: 140, speed: 1900, life: 2.6 });
+      const p = beatPh(u), n = Math.floor((u - B0) / BEAT);
+      if (u < 13.95) { fx2Burst('spark', p, { x: 300 + hash(n) * 1320, y: 160 + hash(n + 3) * 260, n: 46, speed: 900, gravity: 300, life: .9, seed: n }); fx2Burst('star', p, { x: 300 + hash(n + 5) * 1320, y: 200 + hash(n + 7) * 200, n: 18, speed: 500, gravity: 200, life: .9, seed: n + 1 }); if (p < .05) fx2Hit(.35); }
+      fx2Rays([340 - X, 20], 0, t, { a: .25 });
+    }
+    // the words, on the bars
+    fx2Slam('下一关', u - barT(0), { size: 210, y: 300, pal: 'gold', out: (at('码农明知道这行邪门') - MUS) - barT(0) - .15 });
+    slam('码农的邪门', t, '码农明知道这行邪门', { size: 150, y: 300, pal: 'red', out: barT(2) - (at('码农明知道这行邪门') - MUS) - .2, rot: .05, stagger: .05 });
+    fx2Slam('舍不得走？', u - barT(2) - .1, { size: 150, y: 300, pal: 'cream', out: BAR - .4, burst: false, hit: .4 });
+    fx2Slam('STAGE CLEAR', drop, { size: 165, y: 250, pal: 'gold', flash: .3, stagger: .035, out: BAR * 2 - .3 });
+    if (u > barT(6) && after(t, '不吹 AI') && !after(t, '只说真话')) fx2Slam('不吹 AI 也不恐惧 AI', since(t, '不吹 AI'), { size: 84, y: 140, pal: 'cream', burst: false, hit: .2 });
+    slam('只说真话', t, '只说真话', { size: 120, y: 140, pal: 'red', flash: .2 });
+    // the last hit of the song: a white flash, then the screen closes in to black on the portal
+    const end = u - 13.93;
+    if (end > 0 && end < .15) fx2Flash(1 - end / .15);
+    if (end > .3) { const k = clamp((end - .3) / 1.0); fx2push(9, c => { c.save(); c.fillStyle = '#05030A'; c.beginPath(); c.rect(0, 0, 1920, 1080); c.arc(960, 560, (1 - k) * 1200 + 1, 0, TAU, true); c.fill(); c.restore(); }); }
+    // a game HUD: level name, hearts, a gold XP bar filling bar by bar
+    fx2push(8, c => { c.save(); c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.font = '900 34px "PingFang SC", sans-serif'; c.lineJoin = 'round'; c.lineWidth = 8; c.strokeStyle = '#140A10'; c.fillStyle = '#FFD34E'; c.strokeText('下一关 · 码农的邪门', 60, 100); c.fillText('下一关 · 码农的邪门', 60, 100);
+      for (let i = 0; i < 10; i++) { c.fillStyle = '#140A10'; c.fillRect(60 + i * 36, 120, 30, 26); c.fillStyle = i < 10 - Math.max(0, Math.floor((u - barT(2)) * 3)) * 0 ? '#FF4D5E' : '#5A2A30'; c.fillRect(64 + i * 36, 124, 22, 18); }
+      const k = clamp((u - barT(0)) / (13.93 - barT(0))); c.fillStyle = '#140A10'; c.fillRect(60, 156, 400, 16); c.fillStyle = '#FFD34E'; c.fillRect(63, 159, Math.round(394 * k), 10); c.restore(); });
+  }, { grade: 'warm', bloom: .6, lead: .15, in: { type: 'pixelate', dur: .45 }, cam: (lt, t) => { const u = mu(t), p = beatPh(u), bump = Math.exp(-p * 9) * (u >= barT(4) ? .07 : .03), drop = u - barT(4);
+    const zBase = u < barT(4) ? ramp(u, [[barT(0), 1.04], [barT(3) + BEAT * 2.4, 1.08], [barT(4) - .05, 1.3]]) : ramp(u, [[barT(4), 1.0], [barT(6), 1.0], [13.9, 1.02]]);
+    const cyBase = u < barT(4) ? ramp(u, [[barT(0), 96], [barT(4) - .05, 110]]) : ramp(u, [[barT(4), 90], [13.9, 100]]);
+    return [ramp(u, [[barT(0), 120], [barT(3), 140], [barT(4), 160], [barT(6), 170]]), cyBase, (u < -.2 ? 1.1 : zBase) + bump]; } });
+
 
   // ---------- the chapter bar and the gold words ----------
-  const chapters = [['上岸', 0], ['FDE 是个啥', at('FDE，听起来')], ['免费演示工程师', at('可我这朋友干了半年')], ['魔幻半年', at('刚入职第一周')], ['免费试吃摊', at('他就跟我吐槽')], ['三个谁', at('后来他把这里面的猫腻')], ['健康的 FDE', at('但我朋友也说')], ['保命三句', at('所以他现在彻底长记性了')], ['写在最后', at('前几天，他默默把')]];
+  const chapters = [['上岸', 0], ['FDE 是个啥', at('FDE，听起来')], ['免费演示工程师', at('可我这朋友干了半年')], ['魔幻半年', at('刚入职第一周')], ['免费试吃摊', at('他就跟我吐槽')], ['三个谁', at('后来他把这里面的猫腻')], ['健康的 FDE', at('但我朋友也说')], ['保命三句', at('所以他现在彻底长记性了')], ['写在最后', at('前几天，他默默把')], ['下一关', at('感谢关注')]];
   const keys = ['FDE', '上岸', '火坑', '前沿部署工程师', 'Palantir', '技术特种兵', '屎山代码', '疯狂招聘', 'Free Demo Engineer', '免费演示工程师', '免费试吃摊', '免费苦力', '保命真话', '大饼', '尖刀连', '30 分钟', 'deepseek', '半价', 'token', '报销', 'Demo', '没有然后', '七八个', '一单都没有', '香肠', '开张', '真实数据', '系统权限', '弟弟', '谁给钱', 'AI 泡沫', '谁考核', 'KPI', '谁占便宜', '恶意比价', '猴版', '有的是人干', '付费试点', '前置投资', '下一步', '预算', '上线时间表', '绩效', '赶紧跑', '点餐', '血泪史', '舍不得走', '只说真话'];
   LOOPS.pxFde = () => {};
   Object.assign(LOOPS.pxFde, { len: D.len, film: K.film({ chapters, keys, post: true }) });
