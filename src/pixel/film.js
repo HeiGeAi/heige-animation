@@ -3,7 +3,7 @@
 //   cut, dissolve (a blocky Bayer dissolve), iris (a circle opening on the new shot), wipe, slide, glitch.
 // A loop with loop.film = { shots, subtitle } is drawn by pxFilmFrame() instead of the usual single pass.
 //   shot: { t0, t1, res: [w, h], draw(lt, t), in: { type, dur, x, y } }   (lt = time since t0; draw may call pxCam)
-let FILM_TMP = null, FILM_TMPX = null, FILM_UP = null, FILM_UPX = null;
+let FILM_TMP = null, FILM_TMPX = null, FILM_UP = null, FILM_UPX = null; const FILM_SLOTS = {};
 // A camera: a shot calls pxCam(x, y, z) while drawing to look at logical point (x, y) zoomed in z >= 1 times. The
 // pixels are first blown up by the whole number, then that picture is scaled the last little bit smoothly, so the
 // blocks stay square and even while the camera drifts (no shimmer from uneven nearest-neighbour columns).
@@ -24,10 +24,14 @@ function pxFilmShot(sh, t, ctx, clip) {
     const vw = pw / PX_CAM.z, vh = ph / PX_CAM.z;
     sx = clamp(PX_CAM.x - vw / 2, 0, pw - vw); sy = clamp(PX_CAM.y - vh / 2, 0, ph - vh); s = 1920 / vw;
     c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+    const r = typeof FX2 !== 'undefined' ? FX2.frame.roll : 0;              // a dutch tilt: turn the picture a little, zoomed so no edge shows
+    if (r) { c.save(); c.translate(960, 540); c.rotate(r); const m = 1 + Math.abs(r) * 1.9; c.scale(m, m); c.translate(-960, -540); }
     c.drawImage(FILM_UP, sx * px, sy * px, vw * px, vh * px, 0, 0, 1920, 1080);
+    if (r) c.restore();
   } else { c.imageSmoothingEnabled = false; c.drawImage(SMALL, 0, 0, 1920, 1080); }
   pxFxFlush(c, s, sx, sy);
   pxTextFlush(c, s, sx, sy);
+  if (typeof fx2Flush === 'function') { fx2Flush(c); FX2.frame.roll = 0; }
   if (clip) { ctx.save(); clip(ctx); ctx.drawImage(FILM_TMP, 0, 0); ctx.restore(); }
 }
 const BAYER8 = (() => { const m = [[0, 2], [3, 1]]; let b = m; for (let n = 2; n < 8; n *= 2) { const nb = []; for (let y = 0; y < n * 2; y++) { nb.push([]); for (let x = 0; x < n * 2; x++) nb[y].push(4 * b[y % n][x % n] + m[Math.floor(y / n)][Math.floor(x / n)]); } b = nb; } return b; })();
@@ -35,7 +39,28 @@ function pxFilmFrame(L, t) {
   const F = L.film, ctx = OUTX;
   let i = F.shots.findIndex(s => t >= s.t0 && t < s.t1); if (i < 0) i = t < F.shots[0].t0 ? 0 : F.shots.length - 1;
   const sh = F.shots[i], tr = sh.in || { type: 'cut' }, k = tr.dur ? clamp((t - sh.t0) / tr.dur) : 1;
-  if (i > 0 && k < 1 && tr.type !== 'cut') {
+  const special = { pixelate: 1, whip: 1, flash: 1, zoom: 1 };
+  if (i > 0 && k < 1 && special[tr.type]) {
+    const prev = F.shots[i - 1], e = ease(k), slot = n => { const c = (FILM_SLOTS[n] ||= Object.assign(document.createElement('canvas'), { width: 1920, height: 1080 })); const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, 1920, 1080); return [c, x]; };
+    if (tr.type === 'pixelate') {                                 // the old shot breaks into big blocks, the new one resolves out of them
+      const first = k < .5, [cv, x] = slot('a'); pxFilmShot(first ? prev : sh, t, x, null);
+      const blk = Math.max(1, Math.round(first ? 1 + k * 2 * 63 : 64 - (k - .5) * 2 * 63)), [sm, sx] = slot('s');
+      sx.imageSmoothingEnabled = true; sx.drawImage(cv, 0, 0, Math.ceil(1920 / blk), Math.ceil(1080 / blk));
+      ctx.imageSmoothingEnabled = false; ctx.drawImage(sm, 0, 0, Math.ceil(1920 / blk), Math.ceil(1080 / blk), 0, 0, Math.ceil(1920 / blk) * blk, Math.ceil(1080 / blk) * blk);
+    } else if (tr.type === 'whip') {                              // a whip pan: both shots fly sideways, smeared
+      const [a, ax] = slot('a'), [b, bx] = slot('b'); pxFilmShot(prev, t, ax, null); pxFilmShot(sh, t, bx, null);
+      const bl = Math.round(Math.sin(k * Math.PI) * 40);
+      ctx.save(); ctx.filter = `blur(${bl}px)`; ctx.drawImage(a, -e * 1920, 0); ctx.drawImage(b, (1 - e) * 1920, 0); ctx.restore();
+    } else if (tr.type === 'flash') {                             // cut on a white flash
+      pxFilmShot(k < .35 ? prev : sh, t, ctx, null);
+      ctx.save(); ctx.fillStyle = `rgba(255,248,235,${k < .35 ? k / .35 : (1 - (k - .35) / .65) ** 2})`; ctx.fillRect(0, 0, 1920, 1080); ctx.restore();
+    } else {                                                      // zoom through: the old shot rushes at the lens, the new one settles back
+      const first = k < .5, [cv, x] = slot('a'); pxFilmShot(first ? prev : sh, t, x, null);
+      const z = first ? 1 + (k * 2) ** 2 * 3 : 1 + (1 - (k - .5) * 2) ** 2 * .6, X = tr.x ?? 960, Y = tr.y ?? 540;
+      ctx.save(); ctx.filter = `blur(${Math.round((first ? k * 2 : 1 - (k - .5) * 2) * 18)}px)`; ctx.translate(X, Y); ctx.scale(z, z); ctx.translate(-X, -Y); ctx.drawImage(cv, 0, 0); ctx.restore();
+      ctx.save(); ctx.fillStyle = `rgba(255,248,235,${(1 - Math.abs(k - .5) * 2) * .8})`; ctx.fillRect(0, 0, 1920, 1080); ctx.restore();
+    }
+  } else if (i > 0 && k < 1 && tr.type !== 'cut') {
     const prev = F.shots[i - 1], e = ease(k);
     pxFilmShot(prev, t, ctx, null);
     const clip = {
@@ -47,5 +72,6 @@ function pxFilmFrame(L, t) {
     }[tr.type] || null;
     pxFilmShot(sh, t, ctx, clip || (c => { c.beginPath(); c.rect(0, 0, 1920, 1080); c.clip(); }));
   } else pxFilmShot(sh, t, ctx, null);
+  if (F.post && typeof fx2Post === 'function') fx2Post(ctx, t);
   if (F.subtitle) F.subtitle(ctx, t);
 }

@@ -9,6 +9,7 @@ const found = new Set();
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
   for (const m of src.matchAll(/(?:\bat|\bafter|\bsince|\bshot)\(\s*(?:t\s*,\s*)?'([^']+)'/g)) found.add(m[1]);
+  for (const m of src.matchAll(/\b(?:slam|burst|roll)\([^;]*?\bt\s*,\s*'([^']+)'/g)) found.add(m[1]);   // the fx2 wrappers in a scene
   for (const m of src.matchAll(/\['([^'@][^']*?)(?:[+-]\d*\.?\d+)?',\s*\{\s*sfx/g)) found.add(m[1]);
   for (const m of src.matchAll(/'([^'@][^']*?)'\s*\+\s*'[+-]\d/g)) found.add(m[1]);
 }

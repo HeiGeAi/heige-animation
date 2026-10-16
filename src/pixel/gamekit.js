@@ -152,7 +152,7 @@ function pxGame(D) {
   // ---------- shots ----------
   const S = [];
   // o.cam(lt, t, d) -> [x, y, z]; the default is a slow push into the middle
-  const shot = (ph, draw, o = {}) => S.push({ ph, draw, cam: o.cam, res: o.res || [320, 180], in: o.in || { type: 'dissolve', dur: .35 }, lead: o.lead ?? .15 });
+  const shot = (ph, draw, o = {}) => S.push({ ph, draw, cam: o.cam, res: o.res || [320, 180], in: o.in || { type: 'dissolve', dur: .35 }, lead: o.lead ?? .15, grade: o.grade, bloom: o.bloom });
   const push = (x, y, z0 = 1.02, z1 = 1.12) => (lt, t, d) => [x, y, lerp(z0, z1, ease(clamp(lt / d)))];
   const title = (n, txt, ic) => (lt, t) => {
     curtain(t, 1); spot(160, t, { w: 90, a: .38 });
@@ -164,7 +164,7 @@ function pxGame(D) {
 
   // the film: times from the phrases, each shot's camera and shake, the chapter bar and the subtitles
   //   chapters: [[name, start time], ...]   keys: words to colour gold in the subtitles
-  const film = ({ chapters = [], keys = [] } = {}) => {
+  const film = ({ chapters = [], keys = [], post = false } = {}) => {
     const missing = S.filter(s => s.ph && at(s.ph) == null).map(s => s.ph);
     if (missing.length) console.warn('shots on phrases with no time (run phrases.mjs and align.py again):', missing);
     const shots = S.filter(s => !s.ph || at(s.ph) != null).map(s => ({ ...s, t0: s.ph ? Math.max(0, at(s.ph) - s.lead) : 0 })).sort((a, b) => a.t0 - b.t0);  // in time order, however they were written
@@ -173,7 +173,9 @@ function pxGame(D) {
       const d = sh.t1 - sh.t0, draw = sh.draw, cam = sh.cam || push(PW / 2, PH / 2 + 6);
       sh.draw = (lt, t) => {
         SHK = 0;
+        if (typeof FX2 !== 'undefined') { if (sh.grade) fx2Grade(sh.grade); if (sh.bloom != null) FX2.frame.bloom = sh.bloom; }
         draw(lt, t);
+        if (typeof FX2 !== 'undefined' && SHK > 0) fx2Hit(Math.min(1, SHK / 4.5));
         let [cx, cy, z] = cam(lt, t, d);
         if (SHK > 0) { const f = Math.floor(t * 24); cx += (hash(f) - .5) * 2 * SHK * PW / 320; cy += (hash(f + 7) - .5) * 2 * SHK * PW / 320; z = Math.max(z, 1.05); }
         pxCam(cx, cy, z); pxFx({ type: 'vig', k: .6 });
@@ -195,7 +197,7 @@ function pxGame(D) {
         c.textAlign = 'center'; break;
       }
     };
-    return { shots, subtitle };
+    return { shots, subtitle, post };
   };
   return {
     at, after, since, R, GOLD, GOLDL, GOLDD, INK, CARD, CREAM, RED, PINK, SKY,

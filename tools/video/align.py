@@ -74,17 +74,39 @@ def main():
         else:
             merged.append((a, b))
     cues = []
-    for a, b in merged:
+    def width(txt):                                     # on-screen width in CJK-character units (Latin letters are narrower)
+        return sum(1 if ord(ch) > 0x2E80 else .58 if ch != ' ' else .3 for ch in txt)
+    def word_bounds(a, b):                              # script positions where a word starts (jieba), or None without it
+        try:
+            import jieba, logging; jieba.setLogLevel(logging.ERROR)
+            for w in [a for a, _ in SOFTEN] + ['他妈的', '屎山代码', '屎山']: jieba.add_word(w, 10 ** 6)
+        except ImportError:
+            return None
+        out, i = set(), a
+        for w in jieba.cut(script[a:b]): out.add(i); i += len(w)
+        return out
+    def split(a, b):
+        """Split script[a:b] into subtitle lines no wider than ~17 characters. Cuts only fall between words: never
+        inside a run of Latin letters or digits (Engineer stays whole), preferring a space or punctuation near the middle."""
         txt = clean(script[a:b])
-        if len(txt) > 17:                               # long: cut near the middle, at a space if there is one
-            mid = len(txt) // 2
-            cut = min((abs(i - mid), i) for i, ch in enumerate(txt) if ch == ' ')[1] if ' ' in txt else mid
-            # map the cut back into the script by counting characters
-            raw = [i for i in range(a, b) if not (script[i] in PUNCT or script[i].isspace())]
-            parts = [(a, raw[min(len(raw) - 1, cut)]), (raw[min(len(raw) - 1, cut)], b)]
-        else:
-            parts = [(a, b)]
-        for p0, p1 in parts:
+        if width(txt) <= 17: return [(a, b)]
+        raw = [i for i in range(a, b) if not (script[i] in PUNCT or script[i].isspace())]
+        bounds = word_bounds(a, b)
+        best = None
+        for k in range(2, len(raw) - 1):                # a cut between raw[k-1] and raw[k]
+            p, q = raw[k - 1], raw[k]
+            if q == p + 1 and script[p].isascii() and script[p].isalnum() and script[q].isascii() and script[q].isalnum(): continue
+            if bounds is not None and q not in bounds: continue          # never inside a Chinese word either
+            if script[q] in '的了着地得们吗呢啊吧': continue                # nor in front of a particle
+            left, right = width(clean(script[a:q])), width(clean(script[q:b]))
+            if min(left, right) < 3: continue
+            gap = script[p + 1:q]
+            score = abs(left - right) - (3 if gap.strip(' ') else 1.5 if gap else 0)   # punctuation, then a space, are the best places
+            if best is None or score < best[0]: best = (score, q)
+        if best is None: return [(a, b)]
+        return split(a, best[1]) + split(best[1], b)
+    for a, b in merged:
+        for p0, p1 in split(a, b):
             tt = t_of(p0, p1)
             if tt and clean(script[p0:p1]): cues.append([round(tt[0], 3), round(tt[1], 3), clean(script[p0:p1])])
     for i in range(len(cues) - 1):                      # no overlaps, and no flicker in short gaps
