@@ -11,7 +11,7 @@ import re
 import sys
 
 PUNCT = '，。！？：；、“”‘’…—()（）「」《》,.!?:;"\''
-SOFTEN = [('他妈', '他喵'), ('放屁', '放P')]           # subtitles only: the voice keeps every word
+SOFTEN = [('他妈', '他喵'), ('放屁', '放P'), ('卧槽', '我去'), ('牛逼', '牛X'), ('装逼', '装X'), ('白嫖', '白P'), ('高潮', '高涨'), ('拉皮条', '拉皮X'), ('孙子', '孙Z')]           # subtitles only: the voice keeps every word
 
 
 def main():
