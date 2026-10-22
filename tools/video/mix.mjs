@@ -27,18 +27,21 @@ if (lost.length) console.warn('skipped (no such phrase in the data, or no such s
 const ev = all.filter(e => !lost.includes(e));
 const args = ['-y', '-i', picture, '-i', voice];
 ev.forEach(e => args.push('-i', `${sfxDir}/${e.name}.wav`));
-const parts = ev.map((e, i) => `[${i + 2}:a]aresample=48000,adelay=${Math.max(0, Math.round((e.t - .04) * 1000))}:all=1,volume=${e.db}dB[s${i}]`);
+// a stereo voice (a finished mix with music) stays stereo: every input is laid out as stereo, or amix falls back to mono
+const stereo = +execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', voice]).toString() > 1;
+const lay = stereo ? ',aformat=channel_layouts=stereo' : '';
+const parts = ev.map((e, i) => `[${i + 2}:a]aresample=48000${lay},adelay=${Math.max(0, Math.round((e.t - .04) * 1000))}:all=1,volume=${e.db}dB[s${i}]`);
 const ins = ev.map((_, i) => `[s${i}]`);
 if (opt.bgm) {
   const lufs = f => +spawnSync('ffmpeg', ['-hide_banner', '-i', f, '-af', 'ebur128', '-f', 'null', '-']).stderr.toString().match(/I:\s+(-?[\d.]+) LUFS/g).pop().match(/-?[\d.]+/)[0];
   const len = +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', picture]).toString();
   const gain = lufs(voice) - +(opt['bgm-below'] ?? 14.16) - lufs(opt.bgm), fade = +(opt.fade ?? 2);
   args.push('-stream_loop', '-1', '-i', opt.bgm);
-  parts.push(`[${ev.length + 2}:a]aresample=48000,volume=${gain.toFixed(2)}dB,afade=t=out:st=${(len - fade).toFixed(2)}:d=${fade}[bg]`);
+  parts.push(`[${ev.length + 2}:a]aresample=48000${lay},volume=${gain.toFixed(2)}dB,afade=t=out:st=${(len - fade).toFixed(2)}:d=${fade}[bg]`);
   ins.push('[bg]');
   console.log(`music ${opt.bgm} at ${gain.toFixed(2)} dB (${opt['bgm-below'] ?? 14.16} dB under the voice), fading out over ${fade} s`);
 }
-const mix = `[1:a]aresample=48000,apad[v];[v]${ins.join('')}amix=inputs=${ins.length + 1}:normalize=0:duration=first[a]`;
-args.push('-filter_complex', [...parts, mix].join(';'), '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', out);
+const mix = `[1:a]aresample=48000${lay},apad[v];[v]${ins.join('')}amix=inputs=${ins.length + 1}:normalize=0:duration=first[a]`;
+args.push('-filter_complex', [...parts, mix].join(';'), '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', String(opt.abr || '192k'), '-shortest', out);   // --abr=320k for a dense finished mix
 execFileSync('ffmpeg', args, { stdio: ['ignore', 'ignore', 'inherit'] });
 console.log(`mixed ${ev.length} sound effects -> ${out}`);
