@@ -102,6 +102,8 @@ const VX = (() => {
   block('brickSoft', { side: tex((u, v) => { const row = v >> 3, off = row % 2 ? 8 : 0; if (v % 8 === 7 || (u + off) % 16 === 0) return '#6A6C7A'; return pick(h3((u + off) >> 4, row, 52), ['#868896', '#80838F', '#8C8E9A']); }) });
   block('floorSoft', { side: tex((u, v) => (u % 8 === 0 || v % 8 === 0) ? '#5C5A6C' : pick(h3(u >> 3, v >> 3, 53), ['#6E6C80', '#726F84', '#6A687C'])) });
   block('stoneSoft', { side: tex(speck(['#6C6E7C', '#686A78', '#70727F'], 54)) });
+  block('bannerBlue', { side: tex(speck(['#3A56A2', '#3C58A6', '#3854A0'], 56)) }); block('bannerOrange', { side: tex(speck(['#D4743A', '#D8783C', '#D07038'], 57)) });
+  block('paperSoft', { side: tex((u, v) => v % 4 === 3 ? '#D8CCB2' : pick(h3(u >> 2, v >> 2, 58), ['#EFE5CE', '#EDE3CB', '#F1E7D0'])) });
   block('plankSoft', { side: tex((u, v) => v % 8 === 7 ? '#5A3C26' : pick(h3(Math.floor((u + (v >> 3) * 5) / 8), v >> 3, 55), ['#9A6A40', '#946440', '#A0704A'])) });
   let ALERT = false;   // the monitor shows the red alert instead of code
 
