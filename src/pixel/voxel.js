@@ -95,10 +95,36 @@ const VX = (() => {
   block('terra2', { side: tex(speck(['#8E5A3E', '#7E4E36', '#9A6444', '#704430'], 42)) });
   block('terra3', { side: tex(speck(['#E8DCC4', '#DED2B8', '#F0E4CC'], 43)) });
   block('glass', { side: tex((u, v) => u === 0 || v === 0 || u === 15 || v === 15 ? '#1A2234' : (u + v) % 9 === 0 ? '#E8F7FF' : '#7FC8E8'), emit: .25 });
+  // anti-moiré soft set (2026-10-26, V058): the same looks at a quarter of the spatial frequency and lower contrast.
+  // Dense 1-texel stripes and bright per-block borders tiled across a whole wall are what read as moiré on a phone
+  // after the platform shrinks and re-encodes the video. New scenes build with these; older scenes keep theirs.
+  block('codeSoft', { top: darkBox, side: tex((u, v) => { const r = v % 6; if (r < 2 || r > 3 || u < 2 || u > 2 + 5 + Math.floor(h3(Math.floor(v / 6), 0, 51) * 7)) return '#161427'; return Math.floor(v / 6) % 2 ? '#3A8EA8' : '#B8AE96'; }), emit: .75 });
+  block('brickSoft', { side: tex((u, v) => { const row = v >> 3, off = row % 2 ? 8 : 0; if (v % 8 === 7 || (u + off) % 16 === 0) return '#6A6C7A'; return pick(h3((u + off) >> 4, row, 52), ['#868896', '#80838F', '#8C8E9A']); }) });
+  block('floorSoft', { side: tex((u, v) => (u % 8 === 0 || v % 8 === 0) ? '#5C5A6C' : pick(h3(u >> 3, v >> 3, 53), ['#6E6C80', '#726F84', '#6A687C'])) });
+  block('stoneSoft', { side: tex(speck(['#6C6E7C', '#686A78', '#70727F'], 54)) });
+  block('plankSoft', { side: tex((u, v) => v % 8 === 7 ? '#5A3C26' : pick(h3(Math.floor((u + (v >> 3) * 5) / 8), v >> 3, 55), ['#9A6A40', '#946440', '#A0704A'])) });
   let ALERT = false;   // the monitor shows the red alert instead of code
 
   // ---------- frame state ----------
   let CAM = null, T0 = 0, ZB = new Float32Array(0), FOC = 1;
+  // anti-moiré (2026-10-26, V053 fan: 密密麻麻的状态会有些摩尔纹): far and grazing faces sample a box-filtered mip level
+  // picked by how many texels one buffer pixel covers, blended between levels so there is no visible LOD seam.
+  // Off by default so older scenes render exactly as before; VX.setMip(1) turns it on (higher = softer).
+  let MIP = 0;
+  const MIPS = new WeakMap();
+  function mips(tx) {
+    let m = MIPS.get(tx); if (m) return m;
+    m = [tx]; let src = tx, n = 16;
+    while (n > 1) {
+      const h = n / 2, d = new Float32Array(h * h * 3);
+      for (let v = 0; v < h; v++) for (let u = 0; u < h; u++) for (let c = 0; c < 3; c++)
+        d[(v * h + u) * 3 + c] = (src[(2 * v * n + 2 * u) * 3 + c] + src[(2 * v * n + 2 * u + 1) * 3 + c] + src[((2 * v + 1) * n + 2 * u) * 3 + c] + src[((2 * v + 1) * n + 2 * u + 1) * 3 + c]) / 4;
+      m.push(d); src = d; n = h;
+    }
+    MIPS.set(tx, m); return m;
+  }
+  const MS = [0, 0, 0];
+  function sampMip(m, L, uu, vv) { const n = 16 >> L, a = m[L], i = (Math.min(n - 1, (vv * n) | 0) * n + Math.min(n - 1, (uu * n) | 0)) * 3; MS[0] = a[i]; MS[1] = a[i + 1]; MS[2] = a[i + 2]; }
   let LIGHTS = [], SPR = [], PTS = [], SHD = [];
   const AMB = [.30, .33, .50], FOG = [.10, .11, .22], SKY = { zen: [.06, .07, .19], hor: [.19, .17, .40], stars: 1, sun: 0 };
   let LDIR = [.26, .28, .40];
@@ -194,6 +220,15 @@ const VX = (() => {
       if (bl.frames && (kind === 1 || id === B.lava || id === B.code || id === B.portal)) tx = (id === B.monitor && ALERT) ? alertT : bl.frames[fr];
       const ti = (Math.min(15, (vv * 16) | 0) * 16 + Math.min(15, (uu * 16) | 0)) * 3;
       let cr = tx[ti], cg = tx[ti + 1], cb = tx[ti + 2];
+      if (MIP) {
+        const cs = Math.abs(nx * dx + ny * dy + nz * dz) / Math.hypot(dx, dy, dz);
+        const fp = 16 * t / FOC / Math.max(.18, cs) * MIP;
+        if (fp > 1) {
+          const lv = Math.min(4, Math.log2(fp)), l0 = Math.floor(lv), fk = lv - l0, m = mips(tx);
+          sampMip(m, l0, uu, vv); cr = MS[0]; cg = MS[1]; cb = MS[2];
+          if (fk > 0 && l0 < 4) { sampMip(m, l0 + 1, uu, vv); cr += (MS[0] - cr) * fk; cg += (MS[1] - cg) * fk; cb += (MS[2] - cb) * fk; }
+        }
+      }
       const dist = t * Math.hypot(dx, dy, dz);
       if (bl.emit && (kind === 1 || id === B.lava || id === B.lamp || id === B.amethyst || id === B.portal || id === B.goldblk || id === B.redlamp)) { cr *= bl.emit; cg *= bl.emit; cb *= bl.emit; }
       else {
@@ -280,7 +315,7 @@ const VX = (() => {
   return {
     B, SX, SY, SZ, set, get, fill, edit, at, frame, draw, remap, light, sprite, pt, shadow, project, capture,
     reset: () => { base.fill(0); EDITS = []; sorted = true; },   // a scene that shares the page with another world starts clean
-    setAlert: v => { ALERT = v; }, setDay, setMoonDir: v => { const l = Math.hypot(...v); MOON = v.map(c => c / l); }, setFog: (a, b) => { fog0 = a; fog1 = b; }, setMoon: k => { moonK = k; }, setAmb: k => { ambK = k; },
+    setAlert: v => { ALERT = v; }, setMip: k => { MIP = k; }, setDay, setMoonDir: v => { const l = Math.hypot(...v); MOON = v.map(c => c / l); }, setFog: (a, b) => { fog0 = a; fog1 = b; }, setMoon: k => { moonK = k; }, setAmb: k => { ambK = k; },
     rgbOf: name => { const bl = BL[B[name]]; const tx = bl.side; return [tx[0] * 255, tx[1] * 255, tx[2] * 255]; },
     texel: (name, i) => { const tx = BL[B[name]].side; return [tx[i * 3] * 255, tx[i * 3 + 1] * 255, tx[i * 3 + 2] * 255]; },
   };

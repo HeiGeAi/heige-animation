@@ -76,6 +76,12 @@ async function openPage(tag = '') {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);
     if (!ok) { console.error(`no loop named "${args.loop}"`); process.exit(1); }
   }
+  if (args.mip) {   // --mip=1: voxel anti-moiré mip sampling, for before/after checks on scenes that don't turn it on themselves
+    await page.evaluate(k => { if (typeof VX !== 'undefined') VX.setMip(k); }, +args.mip);
+  }
+  if (args.soft) {   // --soft: swap the dense blocks for the anti-moiré soft set every frame (before/after checks only)
+    await page.evaluate(() => { const f = VX.frame, B = VX.B; VX.frame = (t, c) => { f(t, c); for (const [a, b] of [['code', 'codeSoft'], ['brick', 'brickSoft'], ['cobble', 'floorSoft'], ['stone', 'stoneSoft'], ['plank', 'plankSoft']]) if (B[a] && B[b]) VX.remap(B[a], B[b]); }; });
+  }
   return page;
 }
 const frameOf = async (page, t, type, q) => {
