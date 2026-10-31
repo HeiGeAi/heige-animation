@@ -3,7 +3,11 @@
 // cast one the same way; until a model gets a rig of its own it uses the body moves (dy jumps and bobs, sq squashes,
 // flip) and the emote over its head, and ignores the face and arm options.
 //   modelPx('dsChibi', x, groundY, { ...feel('happy', t), emote: '!', emoteK: 1 })
-const MODEL_CAST = { deepseek: 'dsChibi' };                           // name -> sprite in SPRITES
+const MODEL_CAST = {                                                  // name -> sprite in SPRITES
+  deepseek: 'dsChibi',
+  // 「小黑开武馆」 (models/wuxia.js)
+  xiaohei: 'wxXiaohei', dario: 'wxDario', ds_menren: 'wxDsMenren', fangdong: 'wxFangdong', zhanggui: 'wxZhanggui', tudi: 'wxTudi', shaobing: 'wxShaobing',
+};
 const MODEL_SPR = {};
 function modelPx(key, x, y, o = {}) {
   key = MODEL_CAST[key] || key; const S = window.SPRITES && SPRITES[key]; if (!S) return;
