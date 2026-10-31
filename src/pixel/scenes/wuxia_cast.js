@@ -9,8 +9,8 @@
   const row = (t, cast) => { for (const [k, x, name, col, o] of cast) { spot(x, t, { w: 56 }); if (k === 'hg') hg(x, FLOOR, { ...feelT('happy', t), poseR: 'wave' }); else if (k === 'ds') ds(x, FLOOR, feelT('happy', t)); else px(k, x, t, o); chip(name, x, FLOOR + 14, col, 7); } };
   const cam = { in: { type: 'cut' }, cam: push(160, 92, 1.0, 1.0) };
   shot('hero', (lt, t) => { curtain(t, 1); row(t, [['xiaoheizi', 100, '小黑子', GOLDL], ['heige_guanzhu', 220, '黑哥 · 馆主', GOLDL]]); sparkle(220, 70, 34, t, 8); }, cam);
-  shot('gates', (lt, t) => { curtain(t, 1); row(t, [['dario', 100, '达里奥', CREAM], ['ds_menren', 220, 'DeepSeek 门人', SKY]]); sparkle(220, 70, 30, t, 6, SKY); }, cam);
-  shot('town', (lt, t) => { curtain(t, 1); row(t, [['fangdong', 50, '房东', CREAM], ['zhanggui', 120, '掌柜', CREAM], ['tudi', 195, '徒弟', GOLDL], ['shaobing', 270, '烧饼摊', PINK]]); }, cam);
+  shot('gates', (lt, t) => { curtain(t, 1); row(t, [['dario', 100, '达里奥', CREAM], ['ds_menren', 220, '大肥鱼', SKY]]); sparkle(220, 70, 30, t, 6, SKY); }, cam);
+  shot('town', (lt, t) => { curtain(t, 1); row(t, [['laohuang', 46, '房东老黄', CREAM], ['sam', 118, '掌柜山姆', CREAM], ['tudi', 190, '徒弟', GOLDL], ['laoma', 268, 'Grok 烧饼 · 老马', PINK]]); }, cam);
   shot('scale', (lt, t) => { curtain(t, 1); row(t, [['hg', 42, '黑哥', GOLDL], ['xiaoheizi', 108, '小黑子', GOLDL], ['heige_guanzhu', 180, '馆主', GOLDL], ['ds', 262, 'DeepSeek', SKY]]); }, cam);
   LOOPS.pxWuxiaCast = () => {};
   Object.assign(LOOPS.pxWuxiaCast, { len: D.len, film: K.film({ chapters: [['主角前后', 0], ['两座山门', 2], ['街坊', 4], ['和黑哥同台', 6]] }) });
