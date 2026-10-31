@@ -5,6 +5,9 @@
 //   modelPx('dsChibi', x, groundY, { ...feel('happy', t), emote: '!', emoteK: 1 })
 const MODEL_CAST = {                                                  // name -> sprite in SPRITES
   deepseek: 'dsChibi',
+  // the rest of the locked roster (models/roster.js)
+  gpt: 'rsGpt', gemini: 'rsGemini', grok: 'rsGrok', muse: 'rsMuse', doubao: 'rsDoubao', qianwen: 'rsQianwen',
+  yuanbao: 'rsYuanbao', kimi: 'rsKimi', zhipu: 'rsZhipu', mimo: 'rsMimo', minimax: 'rsMinimax', wenxin: 'rsWenxin',
   // 「黑哥武馆」 V066 (models/wuxia.js)
   xiaoheizi: 'wxXiaoheizi', heige_guanzhu: 'wxHeigeGuanzhu', dario: 'wxDario', ds_menren: 'wxDsMenren', dafeiyu: 'wxDsMenren', liangsheng: 'wxLiangsheng',
   laohuang: 'wxLaohuang', sam: 'wxSam', tudi: 'wxTudi', laoma: 'wxLaoma',

@@ -4,7 +4,11 @@
 
 ![黑哥武馆角色设定表](docs/wuxia/cast-sheet.png)
 
-最新一批角色是视频「黑哥武馆」的九个武侠小人（小黑子、黑哥馆主、达里奥、大肥鱼、梁圣、房东老黄、掌柜山姆奥特曼、徒弟、摊主老马），见 [src/pixel/models/wuxia.js](src/pixel/models/wuxia.js) 和 [docs/wuxia/](docs/wuxia/)。
+问问黑哥的 AI 大模型全家福也都有像素版（GPT、Gemini、Grok、Muse、DeepSeek、豆包、千问、元宝、Kimi、智谱、MiMo、MiniMax、文心），见 [src/pixel/models/roster.js](src/pixel/models/roster.js) 和 [docs/roster/](docs/roster/)：
+
+![AI 大模型全家福](docs/roster/04-family.jpg)
+
+另一批角色是视频「黑哥武馆」的九个武侠小人（小黑子、黑哥馆主、达里奥、大肥鱼、梁圣、房东老黄、掌柜山姆奥特曼、徒弟、摊主老马），见 [src/pixel/models/wuxia.js](src/pixel/models/wuxia.js) 和 [docs/wuxia/](docs/wuxia/)。
 
 ```bash
 npm install
