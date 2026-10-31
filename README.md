@@ -1,3 +1,22 @@
+# heige-animation · 像素黑哥动画工程
+
+问问黑哥（HeiGeAi）的像素角色动画工程，fork 自 [JohnHeibel/ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase)。在原项目的 p5.js 水彩引擎旁边加了一套像素后端：像素黑哥（四个朝向、31 种情绪、手势、走路）、像素 Clawd、像素 DeepSeek，以及「像素游戏动画」套件（幕布舞台、聚光灯、金框游戏 UI、章节栏、关键词字幕），问问黑哥的像素视频都用它做。
+
+![黑哥武馆角色设定表](docs/wuxia/cast-sheet.png)
+
+最新一批角色是视频「黑哥武馆」的九个武侠小人（小黑子、黑哥馆主、达里奥、大肥鱼、梁圣、房东老黄、掌柜山姆奥特曼、徒弟、摊主老马），见 [src/pixel/models/wuxia.js](src/pixel/models/wuxia.js) 和 [docs/wuxia/](docs/wuxia/)。
+
+```bash
+npm install
+node render.mjs --page=pixel.html --loop=pxWuxiaCast --stills=1.4,3.4,5.4,7.4 --out=out/pixel/wuxia
+```
+
+**授权：** 代码沿用上游的 MIT（见 [LICENSE](LICENSE)）。角色形象另有约定，见 [CHARACTERS.md](CHARACTERS.md)。
+
+The original English README follows.
+
+---
+
 # Claude Animation Base
 
 This is a small starter kit with code, instructions and assets for animating a character in [p5.js](https://p5js.org) and [p5.brush](https://github.com/acamposuribe/p5.brush) with Claude Opus 5.5. It's based on the code from the music video [I'm Upping My P(doom)](https://github.com/JohnHeibel/PDoomVideo) and an analysis of what the model did and didn't do well. I highly recommend playing around with your prompting: make it give you the storyboard before coding, give it very broad instructions, try being very specific, ask for subagents, and try a bunch of other fun ways of testing the model's capabilities. In my testing, it can do a lot with very little, but it's also quite accurate when you give it more requirements. Also try asking the model to swap out the character or make new emotions or costumes, give it your own reference images, and try many other fun things like that. I've found that the reasoning level corresponds to how "extravagant" and detail-oriented the model makes the scene. All test videos were generated with Opus 5.5 on xhigh reasoning in Claude Code.
