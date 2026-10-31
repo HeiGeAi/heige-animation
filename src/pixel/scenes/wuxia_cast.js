@@ -1,25 +1,17 @@
-// pixel/scenes/wuxia_cast.js: the cast of 「小黑开武馆」 on the 像素游戏动画 stage, at the size they act at (320 × 180, 6× up):
-// the three leads, the four townsfolk, then 小黑 and the DeepSeek disciple beside 黑哥 and the roster's DeepSeek for scale.
-//   node render.mjs --page=pixel.html --loop=pxWuxiaCast --stills=1.4,3.4,5.4 --out=out/pixel/wuxia
+// pixel/scenes/wuxia_cast.js: the cast of 「黑哥武馆」 (V066) on the 像素游戏动画 stage, at the size they act at (320 × 180,
+// 6× up): the hero before and after (小黑子, then 黑哥 the school's master), the two gates, the townsfolk, then the new
+// faces beside 黑哥 himself and the roster's DeepSeek for scale.
+//   node render.mjs --page=pixel.html --loop=pxWuxiaCast --stills=1.4,3.4,5.4,7.4 --out=out/pixel/wuxia
 (() => {
-  const D = { marks: { leads: 0, town: 2, scale: 4 }, cues: [], len: 6 }, K = pxGame(D);
+  const D = { marks: { hero: 0, gates: 2, town: 4, scale: 6 }, cues: [], len: 8 }, K = pxGame(D);
   const { shot, curtain, spot, hg, ds, feelT, chip, push, sparkle, GOLDL, SKY, CREAM, PINK } = K;
   const px = (k, x, t, o = {}) => modelPx(k, Math.round(x), FLOOR, { ...feelT(o.feel || 'happy', t), ...o });
-  const row = (t, cast) => { for (const [k, x, name, col, o] of cast) { spot(x, t, { w: 56 }); px(k, x, t, o); chip(name, x, FLOOR + 14, col, 7); } };
-  shot('leads', (lt, t) => {
-    curtain(t, 1);
-    row(t, [['xiaohei', 64, '小黑', GOLDL], ['dario', 160, '达里奥', CREAM], ['ds_menren', 256, 'DeepSeek 门人', SKY]]);
-    sparkle(256, 70, 30, t, 6, SKY);
-  }, { in: { type: 'cut' }, cam: push(160, 92, 1.0, 1.0) });
-  shot('town', (lt, t) => {
-    curtain(t, 1);
-    row(t, [['fangdong', 50, '房东', CREAM], ['zhanggui', 120, '掌柜', CREAM], ['tudi', 195, '徒弟', GOLDL], ['shaobing', 270, '烧饼摊', PINK]]);
-  }, { in: { type: 'cut' }, cam: push(160, 92, 1.0, 1.0) });
-  shot('scale', (lt, t) => {
-    curtain(t, 1); for (const x of [42, 108, 186, 272]) spot(x, t, { w: 52 });
-    hg(42, FLOOR, { ...feelT('happy', t), poseR: 'wave' }); px('xiaohei', 108, t); ds(186, FLOOR, feelT('happy', t)); px('ds_menren', 272, t);
-    chip('黑哥', 42, FLOOR + 14, GOLDL, 7); chip('小黑', 108, FLOOR + 14, GOLDL, 7); chip('DeepSeek', 186, FLOOR + 14, SKY, 7); chip('门人', 272, FLOOR + 14, SKY, 7);
-  }, { in: { type: 'cut' }, cam: push(160, 92, 1.0, 1.0) });
+  const row = (t, cast) => { for (const [k, x, name, col, o] of cast) { spot(x, t, { w: 56 }); if (k === 'hg') hg(x, FLOOR, { ...feelT('happy', t), poseR: 'wave' }); else if (k === 'ds') ds(x, FLOOR, feelT('happy', t)); else px(k, x, t, o); chip(name, x, FLOOR + 14, col, 7); } };
+  const cam = { in: { type: 'cut' }, cam: push(160, 92, 1.0, 1.0) };
+  shot('hero', (lt, t) => { curtain(t, 1); row(t, [['xiaoheizi', 100, '小黑子', GOLDL], ['heige_guanzhu', 220, '黑哥 · 馆主', GOLDL]]); sparkle(220, 70, 34, t, 8); }, cam);
+  shot('gates', (lt, t) => { curtain(t, 1); row(t, [['dario', 100, '达里奥', CREAM], ['ds_menren', 220, 'DeepSeek 门人', SKY]]); sparkle(220, 70, 30, t, 6, SKY); }, cam);
+  shot('town', (lt, t) => { curtain(t, 1); row(t, [['fangdong', 50, '房东', CREAM], ['zhanggui', 120, '掌柜', CREAM], ['tudi', 195, '徒弟', GOLDL], ['shaobing', 270, '烧饼摊', PINK]]); }, cam);
+  shot('scale', (lt, t) => { curtain(t, 1); row(t, [['hg', 42, '黑哥', GOLDL], ['xiaoheizi', 108, '小黑子', GOLDL], ['heige_guanzhu', 180, '馆主', GOLDL], ['ds', 262, 'DeepSeek', SKY]]); }, cam);
   LOOPS.pxWuxiaCast = () => {};
-  Object.assign(LOOPS.pxWuxiaCast, { len: D.len, film: K.film({ chapters: [['武馆主角', 0], ['街坊', 2], ['和黑哥同台', 4]] }) });
+  Object.assign(LOOPS.pxWuxiaCast, { len: D.len, film: K.film({ chapters: [['主角前后', 0], ['两座山门', 2], ['街坊', 4], ['和黑哥同台', 6]] }) });
 })();

@@ -5,8 +5,8 @@
 //   modelPx('dsChibi', x, groundY, { ...feel('happy', t), emote: '!', emoteK: 1 })
 const MODEL_CAST = {                                                  // name -> sprite in SPRITES
   deepseek: 'dsChibi',
-  // 「小黑开武馆」 (models/wuxia.js)
-  xiaohei: 'wxXiaohei', dario: 'wxDario', ds_menren: 'wxDsMenren', fangdong: 'wxFangdong', zhanggui: 'wxZhanggui', tudi: 'wxTudi', shaobing: 'wxShaobing',
+  // 「黑哥武馆」 V066 (models/wuxia.js)
+  xiaoheizi: 'wxXiaoheizi', heige_guanzhu: 'wxHeigeGuanzhu', dario: 'wxDario', ds_menren: 'wxDsMenren', fangdong: 'wxFangdong', zhanggui: 'wxZhanggui', tudi: 'wxTudi', shaobing: 'wxShaobing',
 };
 const MODEL_SPR = {};
 function modelPx(key, x, y, o = {}) {

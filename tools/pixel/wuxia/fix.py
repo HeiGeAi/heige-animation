@@ -1,5 +1,6 @@
 """Post-fixes for the wuxia cast: drop the ground shadow the image model drew under the feet (the engine draws its own),
-repaint 掌柜's teacup (3 px of blue-and-white turns to mud at block 10), then re-outline and crop to the figure."""
+repaint 掌柜's teacup (3 px of blue-and-white turns to mud at block 10), redraw the 馆主's glasses (thin frames fade at
+block 10, and the glasses are what make him 黑哥), then re-outline and crop to the figure."""
 import subprocess, colorsys, sys
 from PIL import Image
 P = '/opt/homebrew/bin/python3'; S = 'design/sprites/wx-'
@@ -21,6 +22,14 @@ for k in sys.argv[1:]:
         for j, row in enumerate(CUP):
             for i, c in enumerate(row):
                 if c != '.': fp[12 + i, 55 + j] = COL[c]
+    if k == 'heige_guanzhu':                                       # two rings and a bridge, over the faded frames
+        fp = f.load(); ink = (21, 19, 26, 255)
+        for cx in (20, 35.5):
+            for y in range(34, 47):
+                for x in range(int(cx) - 6, int(cx) + 7):
+                    d = (((x + .5 - cx) / 4.6) ** 2 + ((y + .5 - 40.5) / 4.9) ** 2) ** .5
+                    if .78 <= d <= 1.1: fp[x, y] = ink
+        for x in range(25, 31): fp[x, 39] = ink
     f = f.crop(f.getbbox()); f.save(f'{S}{k}-final.png')
     f.resize((f.width * 8, f.height * 8), Image.NEAREST).save(f'{S}{k}-final_x8.png')
     print(k, 'shadow px', n, '->', f.size)
