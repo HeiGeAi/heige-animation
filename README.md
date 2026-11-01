@@ -4,7 +4,7 @@
 
 ![黑哥武馆角色设定表](docs/wuxia/cast-sheet.png)
 
-问问黑哥的 AI 大模型全家福也都有像素版（GPT、Gemini、Grok、Muse、DeepSeek、豆包、千问、元宝、Kimi、智谱、MiMo、MiniMax、文心），见 [src/pixel/models/roster.js](src/pixel/models/roster.js) 和 [docs/roster/](docs/roster/)：
+问问黑哥的 AI 大模型全家福也都有像素版（Claude 由 Clawd 出演，另有 GPT、Gemini、Grok、Muse、DeepSeek、豆包、千问、元宝、Kimi、智谱、MiMo、MiniMax、文心），见 [src/pixel/models/roster.js](src/pixel/models/roster.js) 和 [docs/roster/](docs/roster/)：
 
 ![AI 大模型全家福](docs/roster/04-family.jpg)
 

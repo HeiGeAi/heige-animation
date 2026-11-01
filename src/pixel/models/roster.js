@@ -1,6 +1,6 @@
 // pixel/models/roster.js: the rest of 问问黑哥's locked model roster (问问黑哥/IP/模型角色) as Q 萌大头 sprites on 黑哥's grid,
 // beside the pixel DeepSeek (models/deepseek.js). Concepts drawn by Codex after each locked 立绘 in the pixel DeepSeek's
-// style (design/roster, not in git), cut by tools/pixel/roster/build.sh. The Claude robot dog stays out: Clawd plays Claude.
+// style (design/roster, not in git), cut by tools/pixel/roster/build.sh. Claude is Clawd (clawdPx), not the 立绘 robot dog.
 // Cast with modelPx('gpt', x, FLOOR, o); the line-up is pxRoster.
 var SPRITES = window.SPRITES = window.SPRITES || {};
 SPRITES['rsGpt'] = { pal: { 'a': '#12142B', 'b': '#171636', 'c': '#FBF3EA', 'd': '#C9C9D4', 'e': '#333B6B', 'f': '#FEFEFE', 'g': '#242C58', 'h': '#EED6C4', 'i': '#CB8A7C', 'j': '#FEE7D7', 'k': '#C6AAA5', 'l': '#EAB2C3', 'm': '#DED8EA', 'n': '#31110E', 'o': '#EAA660', 'p': '#FCC767', 'q': '#CCAEC9', 'r': '#D46655', 's': '#FD9E91', 't': '#FEBEAF', 'u': '#EA7E77' },
