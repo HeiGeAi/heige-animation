@@ -317,6 +317,9 @@ const VX = (() => {
   return {
     B, SX, SY, SZ, set, get, fill, edit, at, frame, draw, remap, light, sprite, pt, shadow, project, capture,
     reset: () => { base.fill(0); EDITS = []; sorted = true; },   // a scene that shares the page with another world starts clean
+    // a scene's own block: fns are (u, v) → '#rrggbb' on the 16×16 grid; appended after the shared set, so older ids never move.
+    // Defining the same name again returns the existing id (scenes can call it at load).
+    defBlock: (name, o) => B[name] ?? block(name, { side: tex(o.side), top: o.top && tex(o.top), bot: o.bot && tex(o.bot), emit: o.emit || 0 }),
     setAlert: v => { ALERT = v; }, setMip: k => { MIP = k; }, setDay, setMoonDir: v => { const l = Math.hypot(...v); MOON = v.map(c => c / l); }, setFog: (a, b) => { fog0 = a; fog1 = b; }, setMoon: k => { moonK = k; }, setAmb: k => { ambK = k; },
     rgbOf: name => { const bl = BL[B[name]]; const tx = bl.side; return [tx[0] * 255, tx[1] * 255, tx[2] * 255]; },
     texel: (name, i) => { const tx = BL[B[name]].side; return [tx[i * 3] * 255, tx[i * 3 + 1] * 255, tx[i * 3 + 2] * 255]; },
