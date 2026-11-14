@@ -2,9 +2,9 @@
 (() => {
   const N = window.BAOLEI;
   const { B, G, VX, K, shot, P, A, AT, sfx, edit, fillEdit, flash,
-    ppl, prop, bubble, label, burst, sweat, sprayStream,
+    clawd, model, ppl, prop, bubble, label, burst, orbitSparks, riseSparks, ringPulse, projArc, sweat, sprayStream,
     seg01, sm, lerp, hh, clamp01, tagUI, slam, toast, stamp, ratioBar, codeWall,
-    SITE, WAR, AMBER, WARM, ALARM, DUSK, NIGHT, DAY } = N;
+    SITE, WAR, AMBER, WARM, ALARM, ICE, DUSK, NIGHT, DAY } = N;
 
   const bob = (t, f = 8, h = .07) => -Math.abs(Math.sin(t * f)) * h;
 
@@ -25,11 +25,18 @@
     ],
     act: t => {
       const cut = t >= CUT_T;
-      ppl(99.5, G + 1, 48, '老板', cut ? 'angry' : 'happy', t, { tag: '老板', tagCol: '#FFD34E', dy: cut ? 0 : bob(t, 10, .06) });
-      if (!cut) prop(99.5, G + 3.3 + Math.sin(t * 6) * .15, 48, 'pie', { k: .035 });
-      ppl(95, G + 1, 49, '开发', cut ? 'shock' : 'neutral', t, { tag: cut ? '全员转全栈!' : '前端部', tagCol: cut ? '#FF5A5A' : '#72C9FE' });
-      if (!cut) ppl(93.5, G + 1, 47, '开发', 'neutral', t, { flip: true, tag: false });
-      if (cut) {
+      ppl(99.5, G + 1, 48, '老板', cut ? 'angry' : 'happy', t, { tag: '老板', tagCol: '#FFD34E', dy: bob(t, 10, .06) });
+      if (!cut) {
+        prop(99.5, G + 3.3 + Math.sin(t * 6) * .15, 48, 'pie', { k: .035 });
+        riseSparks(t, 99.5, G + 1.8, 48, 2.2, 2.8, [255, 212, 59], 8, 1.1, .06);
+      }
+      const fleeDx = cut ? (t - CUT_T) * 1.1 : 0;
+      ppl(95 + fleeDx * .3, G + 1, 49, '开发', cut ? 'shock' : 'type', t, { walk: cut, tag: cut ? '全员转全栈!' : '前端部', tagCol: cut ? '#FF5A5A' : '#72C9FE' });
+      if (!cut) ppl(93.5, G + 1, 47, '开发', 'type', t, { flip: true, tag: false });
+      else {
+        ppl(93.5 - fleeDx, G + 1, 47.5, '开发', 'panic', t, { walk: true, flip: true, tag: false });
+        riseSparks(t, 95, G + 1.6, 43, 4.8, 3.6, [255, 118, 86], 14, 1.3, .08);
+        ringPulse(t, 1.2, 95, G + 2.2, 43, 3.2, [255, 90, 72], 14, .07);
         burst(t, CUT_T, 95, G + 3.5, 43, [255, 90, 72], 30);
         label(95, G + 5.0, 43, '[×] 前端部已砍！', 48, '#FF5A5A', t, CUT_T, B2);
       }
@@ -77,8 +84,10 @@
         prop(devX + (Math.cos(t * 2.8) >= 0 ? .9 : -.9), G + 1.9, 49.6, 'gun', { k: .028 });
         const targetTx = Math.sin(t * 2.8) < -.3 ? 104 : Math.sin(t * 2.8) > .3 ? 116 : 110;
         sprayStream(t, devX, G + 2.0, 49.2, targetTx, G + 6 + (t - GUN_T) * .35, 44, [224, 198, 148]);
+        for (const tx of [104, 110, 116]) riseSparks(t, tx, G + 4.5, 44, 2.4, 3.8, [238, 198, 142], 6, 1.3, .07);
       }
-      // 需求箱子从天而降
+      // 需求箱子从天而降 + 塔吊吊块晃动
+      prop(116 + Math.sin(t * 2.4) * .35, G + 6.6, 41.2, 'doc', { k: .024 });
       for (let i = 0; i < 4; i++) {
         const dropY = G + 9 - ((t * 2.6 + i * .9) % 7);
         prop(103 + i * 4.5, dropY, 47, 'doc', { k: .022 });
@@ -99,18 +108,36 @@
   shot(B3, B4, {
     day: DUSK, fog: [45, 130], kicks: [[NUMB_T, .55]],
     keys: [
-      K(B3, [121.5, G + 3.8, 61], [121.0, G + 2.2, 54], 54),
-      K(CODE_T, [121.8, G + 3.5, 60], [121.2, G + 2.2, 54], 52),
-      K(NUMB_T, [121.4, G + 3.4, 59.5], [121.0, G + 2.1, 54], 50),
-      K(B4, [121.5, G + 3.6, 60], [121.2, G + 2.2, 54], 52),
+      K(B3, [121.8, G + 4.1, 61.8], [120.8, G + 2.2, 54], 55),
+      K(CODE_T, [122.4, G + 3.6, 59.5], [120.6, G + 2.3, 54], 51),
+      K(NUMB_T, [120.8, G + 3.3, 59.2], [120.8, G + 2.2, 54.2], 49),
+      K(B4, [122.0, G + 3.8, 60.4], [121.0, G + 2.2, 54], 52),
     ],
+    lights: t => {
+      VX.light(118, G + 3.4, 53, t >= NUMB_T ? ALARM : ICE, 8, 1.1 + .25 * Math.sin(t * 11));
+    },
     act: t => {
       const numb = t >= NUMB_T;
       ppl(118, G + 1, 55.2, '开发', numb ? 'closed' : 'dizzy', t, {
-        blind: numb, tag: numb ? '闭眼直接提交线上' : '看不过来了...', tagCol: numb ? '#FF5A5A' : '#72C9FE',
+        blind: numb, shake: !numb, dy: bob(t, numb ? 3 : 8, .03),
+        tag: numb ? '闭眼直接提交线上' : '看不过来了...', tagCol: numb ? '#FF5A5A' : '#72C9FE',
       });
-      if (!numb) sweat(t, 118, G + 2.9, 55.2);
-      if (numb) burst(t, NUMB_T, 118, G + 2.2, 54, [255, 198, 92], 14);
+      // AI 助手疯狂倾泻上千行代码包，开发被代码瀑布淹没
+      const hover = Math.sin(t * 4.5) * .18;
+      clawd(115.8, G + 1.5 + hover, 53.8, { ...feel('happy', t) }, { k: .015, tag: false });
+      model('deepseek', 120.4, G + 1.5 - hover, 53.8, 'happy', t, { k: .018, tag: false });
+      const cy = (t * 2.2) % 1, cy2 = (t * 2.2 + .5) % 1;
+      projArc(cy, 0, 1, 115.8, G + 2.3, 53.8, 118, G + 2.2, 54.8, .9, [255, 168, 130], .09);
+      projArc(cy2, 0, 1, 120.4, G + 2.3, 53.8, 118, G + 2.2, 54.8, .9, [157, 180, 255], .09);
+      riseSparks(t, 118, G + 1.8, 53.5, 3.2, 3.6, numb ? [255, 96, 82] : [114, 201, 254], 14, 1.4, .07);
+      for (let i = 0; i < 4; i++) prop(116.5 + i * 1.1, G + 1.8 + ((t * 2.4 + i * .7) % 2.8), 54.4, 'doc', { k: .022 });
+      if (!numb) {
+        sweat(t, 118, G + 2.9, 55.2);
+        orbitSparks(t, 118, G + 3.25, 55.2, .6, [255, 212, 59], 4, 4.2, .06);
+      } else {
+        ringPulse(t, 1.0, 118, G + 2.4, 54.2, 2.8, [255, 90, 90], 14, .07);
+        burst(t, NUMB_T, 118, G + 2.2, 54, [255, 198, 92], 14);
+      }
     },
     ui: (c, t) => {
       codeWall(c, t, B3 + .2, B4, 1130, 80);
@@ -140,14 +167,19 @@
       const quit = t >= QUIT_T;
       const walkDz = quit ? (t - QUIT_T) * .75 : 0;
       ppl(118, G + 1, 55.5 + walkDz, '测试', quit ? 'shrug' : 'panic', t, {
-        walk: quit, blind: quit,
+        walk: true, blind: quit, shake: !quit,
         tag: quit ? '谁在不在都难说' : '测试老哥：一屏窟窿',
         tagCol: quit ? '#FFD34E' : '#FF7B73',
       });
       if (quit) {
         ppl(116, G + 1, 55.2 + walkDz, '开发', 'shrug', t, { walk: true, blind: true, tag: false });
-        prop(118, G + 2.2, 53.5, 'bomb', { k: .028 });
+        prop(118, G + 2.2 + Math.sin(t * 10) * .08, 53.5, 'bomb', { k: .028 });
+        ringPulse(t, 1.0, 118, G + 2.4, 53.5, 3.2, [255, 86, 70], 16, .08);
+        riseSparks(t, 118, G + 2.4, 53.5, 2.0, 3.2, [255, 112, 84], 10, 1.4, .07);
       } else {
+        prop(116.5, G + 2.0, 54.0, 'wrench', { k: .024 });
+        burst(t, FIX_T + .15, 123, G + 3.0, 54, [255, 140, 82], 18);
+        burst(t, FIX_T + 1.15, 113, G + 3.0, 54, [255, 140, 82], 18);
         for (let i = 0; i < 6; i++) {
           const bx = 115.5 + i * 1.1, by = G + 2.6 + Math.sin(t * 5 + i) * .5;
           label(bx, by, 53.8, 'BUG!', 28, '#FF5A5A', t, B4, QUIT_T);

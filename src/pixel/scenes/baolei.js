@@ -67,148 +67,302 @@
   const OFFICE = { x: 136, z: 88 };             // 区5b：运营/财务/策划工位 + 豆包/DeepSeek
   const IRON = { x: 104, z: 66 };               // 区6：三条保命铁律车间（承重墙/关AI台/物理隔离墙）
 
+  // 自定义精细 16×16 体素方块（严格零绿、抗莫尔纹高对比建筑质感）
+  const blkH = (u, v, s = 0) => { const n = Math.sin(u * 127.1 + v * 311.7 + s * 74.7) * 43758.5453; return n - Math.floor(n); };
+  VX.defBlock('blPlaza', {
+    side: (u, v) => (u === 0 || v === 0) ? '#4A4C60' : (u === 1 || v === 1) ? '#6D7088' : ((u >> 3) ^ (v >> 3)) & 1 ? '#5E6076' : '#57596F',
+  });
+  VX.defBlock('blRoad', {
+    top: (u, v) => (u === 0 || u === 15) ? '#555A74' : (u === 1 || u === 14) ? '#26293A' : (u >= 7 && u <= 8 && v >= 2 && v <= 10) ? '#D4A84E' : blkH(u, v, 3) < .15 ? '#3C4056' : '#34384B',
+    side: (u, v) => v < 3 ? '#555A74' : '#2C3042',
+  });
+  VX.defBlock('blCable', {
+    top: (u, v) => (v >= 6 && v <= 9) ? ((u % 4 < 2) ? '#72C9FE' : '#4D96DA') : (u === 0 || v === 0) ? '#24283C' : '#353A52',
+    side: () => '#2C3042',
+    emit: .42,
+  });
+  VX.defBlock('blRoof', {
+    side: (u, v) => v % 4 === 0 ? '#1A162A' : ((u + (v >> 2) * 4) % 8 === 0 ? '#221D36' : '#2E284A'),
+    top: (u, v) => (u % 4 === 0 || v % 4 === 0) ? '#221D36' : '#302A4E',
+  });
+  VX.defBlock('blSkyWarm', {
+    side: (u, v) => {
+      if (u % 5 === 0 || v % 5 === 0) return '#15192B';
+      const bx = Math.floor(u / 5), by = Math.floor(v / 5), r = blkH(bx, by, 11);
+      if (r < .32) return '#E8B258';
+      if (r < .48) return '#FFD478';
+      return '#222842';
+    },
+    top: () => '#1D2238',
+    emit: .38,
+  });
+  VX.defBlock('blSkyBlue', {
+    side: (u, v) => {
+      if (u % 5 === 0 || v % 5 === 0) return '#161B2E';
+      const bx = Math.floor(u / 5), by = Math.floor(v / 5), r = blkH(bx, by, 23);
+      if (r < .35) return '#568FD2';
+      if (r < .48) return '#78B6F0';
+      return '#212740';
+    },
+    top: () => '#1D2238',
+    emit: .34,
+  });
+  VX.defBlock('blLeafInd', {
+    side: (u, v) => {
+      const r = blkH(u >> 1, v >> 1, 7);
+      if (v < 3 && r > .4) return '#3C4A84';
+      return r < .3 ? '#1D2548' : r < .7 ? '#26315E' : '#313F76';
+    },
+  });
+  VX.defBlock('blLeafGold', {
+    side: (u, v) => {
+      const r = blkH(u >> 1, v >> 1, 19);
+      if (v < 3 && r > .4) return '#ECA24A';
+      return r < .3 ? '#9A541E' : r < .7 ? '#B86E2A' : '#D68838';
+    },
+  });
+  VX.defBlock('blPillar', {
+    side: (u, v) => (v <= 1 || v >= 14) ? '#F4E4AE' : (u % 4 === 0 ? '#A47224' : '#DFAF44'),
+    top: (u, v) => (u === 0 || v === 0 || u === 15 || v === 15) ? '#A47224' : '#F4E4AE',
+    emit: .12,
+  });
+  VX.defBlock('blWarn', {
+    side: (u, v) => ((u + v) >> 2) % 2 ? '#DF9D36' : '#221E30',
+  });
+  VX.defBlock('blServer', {
+    side: (u, v) => {
+      if (u === 0 || u === 15 || v % 4 === 0) return '#191D2E';
+      if (v % 4 === 2 && (u === 3 || u === 4)) return '#FF5A5A';
+      if (v % 4 === 2 && (u === 7 || u === 8)) return '#72C9FE';
+      if (v % 4 === 2 && (u === 11 || u === 12)) return '#FFD43B';
+      return '#2A3046';
+    },
+    top: () => '#23283C',
+    emit: .28,
+  });
+  VX.defBlock('blGlass', {
+    side: (u, v) => (u === 0 || v === 0 || u === 15 || v === 15) ? '#222A40' : ((u + v) % 7 === 0 ? '#78B2E6' : '#3C66A4'),
+    emit: .18,
+  });
+
   const LAMPS = [];
   function putLamp(x, y, z, col = AMBER, rad = 7, inten = 1.05) {
-    VX.set(x, y - 1, z, B.log);
+    const baseY = Math.max(G + 1, y - 2);
+    VX.set(x, baseY, z, B.iron);
+    for (let yy = baseY + 1; yy < y; yy++) VX.set(x, yy, z, B.log);
     VX.set(x, y, z, B.lamp);
+    VX.set(x, y + 1, z, B.obsidian);
     LAMPS.push([x, y, z, col, rad, inten]);
+  }
+  function putTree(x, z, gold = false) {
+    const lf = gold ? B.blLeafGold : B.blLeafInd;
+    VX.set(x, G + 1, z, B.iron);
+    VX.fill(x, G + 1, z, x, G + 3, z, B.log);
+    VX.fill(x - 2, G + 4, z - 2, x + 2, G + 4, z + 2, lf);
+    VX.fill(x - 1, G + 5, z - 1, x + 1, G + 6, z + 1, lf);
+    VX.set(x - 2, G + 4, z - 2, 0); VX.set(x + 2, G + 4, z - 2, 0);
+    VX.set(x - 2, G + 4, z + 2, 0); VX.set(x + 2, G + 4, z + 2, 0);
+    VX.set(x, G + 3, z, B.log);
+  }
+  function putTower(x, z, w, d, h, kind = 'warm') {
+    const win = kind === 'blue' ? B.blSkyBlue : B.blSkyWarm;
+    const topY = Math.min(VX.SY - 4, G + h);
+    VX.fill(x, G + 1, z, x + w - 1, G + 3, z + d - 1, B.obsidian);
+    VX.fill(x, G + 4, z, x + w - 1, topY - 2, z + d - 1, win);
+    VX.fill(x + 1, topY - 1, z + 1, x + w - 2, topY, z + d - 2, B.blRoof);
+    const cx = x + Math.floor(w / 2), cz = z + Math.floor(d / 2);
+    VX.set(cx, topY + 1, cz, kind === 'blue' ? B.lamp : B.redlamp);
   }
 
   function buildWorld() {
     VX.reset();
-    VX.setMip(1.5);
+    VX.setMip(1.25);
     LAMPS.length = 0;
 
-    // 1. 地形基底：中心平坦园区广场，外围柔和阶梯山丘（低频 soft 方块，零莫尔纹）
+    // 1. 地形基底：中心平坦园区采用精细地砖，外围柔和山丘＋远景写字楼天际线（严格零绿、零莫尔纹）
     const rectD = (x, z) => Math.hypot(Math.max(PLAZA.x0 - x, 0, x - PLAZA.x1), Math.max(PLAZA.z0 - z, 0, z - PLAZA.z1));
     for (let x = 0; x < VX.SX; x++) for (let z = 0; z < VX.SZ; z++) {
       const far = clamp01((rectD(x, z) - 2) / 28);
       const n = 2.8 * Math.sin(x * .055 + .5) + 2.4 * Math.cos(z * .05 + 1.0) + 3.2 * Math.max(0, Math.sin(x * .04 - z * .03));
       const h = Math.min(28, G + Math.round(Math.max(0, n + 2) * far * 1.5));
       for (let y = 0; y <= h; y++) {
-        VX.set(x, y, z, y === 0 ? B.bedrock : y > G && y === h ? B.stoneSoft : y < G ? B.deep : (far > 0 ? B.stoneSoft : B.floorSoft));
+        VX.set(x, y, z, y === 0 ? B.bedrock : y > G && y === h ? B.stoneSoft : y < G ? B.deep : (far > 0 ? B.stoneSoft : B.blPlaza));
       }
     }
 
-    // 园区十字道路与地台（清晰区域分隔）
-    VX.fill(60, G, 66, 152, G, 69, B.plankSoft);
-    VX.fill(102, G, 34, 106, G, 104, B.plankSoft);
-    VX.fill(96, G, 86, 112, G, 96, B.bannerBlue);
-    VX.fill(98, G, 87, 110, G, 95, B.plankSoft);
+    // 远景夜景写字楼天际线（全部位于 PLAZA 外环，绝不遮挡机位）
+    [
+      [18, 8, 8, 7, 17, 'warm'], [30, 6, 9, 8, 22, 'blue'], [44, 10, 7, 7, 15, 'warm'],
+      [58, 7, 9, 8, 20, 'blue'], [74, 8, 8, 7, 18, 'warm'], [88, 6, 10, 8, 24, 'blue'],
+      [104, 7, 9, 7, 21, 'warm'], [120, 8, 8, 8, 23, 'blue'], [136, 7, 9, 7, 19, 'warm'],
+      [152, 8, 8, 8, 22, 'blue'], [166, 6, 9, 8, 17, 'warm'], [182, 9, 8, 7, 20, 'blue'],
+      [14, 30, 8, 8, 18, 'blue'], [16, 48, 7, 8, 16, 'warm'], [15, 68, 8, 9, 21, 'blue'], [16, 90, 8, 8, 17, 'warm'],
+      [176, 30, 8, 8, 19, 'warm'], [178, 50, 8, 8, 22, 'blue'], [176, 70, 9, 8, 17, 'warm'], [178, 92, 8, 8, 20, 'blue'],
+      [26, 118, 9, 7, 15, 'warm'], [48, 118, 8, 7, 13, 'blue'], [158, 118, 8, 7, 14, 'warm'], [174, 118, 9, 7, 16, 'blue'],
+    ].forEach(t => putTower(...t));
 
-    // 2. 区1 HOST：巨型户外屏幕 + 黑哥播报台
-    VX.fill(HOST.x - 6, G + 1, HOST.scrZ, HOST.x + 6, G + 8, HOST.scrZ, B.obsidian);
+    // 园区主干大道、路缘石与光纤线槽
+    VX.fill(58, G, 66, 154, G, 69, B.blRoad);
+    VX.fill(102, G, 34, 106, G, 105, B.blRoad);
+    for (let x = 66; x <= 146; x++) VX.set(x, G, 65, B.blCable);
+    for (let z = 44; z <= 90; z++) VX.set(101, G, z, B.blCable);
+    VX.fill(96, G, 86, 112, G, 96, B.iron);
+    VX.fill(97, G, 87, 111, G, 95, B.plankSoft);
+
+    // 园区边缘四季夜色树阵（全非绿蓝紫 / 琥珀金冠，衬托建筑层次）
+    [
+      [57, 36, false], [57, 61, true], [57, 74, false], [57, 96, true],
+      [88, 97, false], [120, 97, true], [154, 36, true], [154, 74, false], [154, 96, false],
+      [89, 34, false], [122, 34, true],
+    ].forEach(t => putTree(...t));
+
+    // 2. 区1 HOST：多级舞台 + 音箱塔 + 屋檐巨幕 + 高杆路灯
+    VX.fill(HOST.x - 7, G + 1, HOST.scrZ, HOST.x + 7, G + 9, HOST.scrZ, B.obsidian);
     VX.fill(HOST.x - 5, G + 2, HOST.scrZ, HOST.x + 5, G + 7, HOST.scrZ, B.bannerBlue);
-    VX.fill(HOST.x - 6, G + 9, HOST.scrZ, HOST.x + 6, G + 9, HOST.scrZ, B.goldblk);
-    VX.fill(HOST.x - 2, G + 1, HOST.scrZ + 4, HOST.x + 2, G + 1, HOST.scrZ + 5, B.plankSoft);
-    putLamp(HOST.x - 7, G + 2, HOST.scrZ + 3, WARM, 8, 1.15);
-    putLamp(HOST.x + 7, G + 2, HOST.scrZ + 3, WARM, 8, 1.15);
-    putLamp(HOST.x - 7, G + 2, HOST.scrZ + 11, AMBER, 7, 1.0);
-    putLamp(HOST.x + 7, G + 2, HOST.scrZ + 11, AMBER, 7, 1.0);
+    VX.fill(HOST.x - 7, G + 9, HOST.scrZ, HOST.x + 7, G + 10, HOST.scrZ, B.blRoof);
+    VX.fill(HOST.x - 6, G + 8, HOST.scrZ, HOST.x + 6, G + 8, HOST.scrZ, B.goldblk);
+    VX.fill(HOST.x - 7, G + 1, HOST.scrZ + 1, HOST.x - 6, G + 6, HOST.scrZ + 1, B.blServer);
+    VX.fill(HOST.x + 6, G + 1, HOST.scrZ + 1, HOST.x + 7, G + 6, HOST.scrZ + 1, B.blServer);
+    VX.set(HOST.x - 7, G + 11, HOST.scrZ, B.redlamp); VX.set(HOST.x + 7, G + 11, HOST.scrZ, B.redlamp);
+    VX.fill(HOST.x - 3, G + 1, HOST.scrZ + 4, HOST.x + 3, G + 1, HOST.scrZ + 5, B.plankSoft);
+    VX.fill(HOST.x - 3, G + 1, HOST.scrZ + 5, HOST.x + 3, G + 1, HOST.scrZ + 5, B.iron);
+    putLamp(HOST.x - 8, G + 3, HOST.scrZ + 3, WARM, 8, 1.15);
+    putLamp(HOST.x + 8, G + 3, HOST.scrZ + 3, WARM, 8, 1.15);
+    putLamp(HOST.x - 8, G + 3, HOST.scrZ + 11, AMBER, 7, 1.0);
+    putLamp(HOST.x + 8, G + 3, HOST.scrZ + 11, AMBER, 7, 1.0);
 
-    // 3. 区2 WAR：深夜复盘会议室（低矮半切墙方便南向透视，会议桌、巨屏、机柜）
-    VX.fill(62, G, 42, 86, G, 64, B.bannerBlue);
-    VX.fill(64, G, 44, 84, G, 62, B.stoneSoft);
+    // 3. 区2 WAR：深夜复盘会议室（立柱、书柜、成排机柜、椅子与屋檐）
+    VX.fill(62, G, 42, 86, G, 64, B.iron);
+    VX.fill(64, G, 44, 84, G, 62, B.blPlaza);
     for (let x = 62; x <= 86; x++) {
       VX.fill(x, G + 1, 42, x, G + 7, 42, B.deep);
       if (Math.abs(x - 74) > 3) VX.fill(x, G + 1, 64, x, G + 2, 64, B.stoneSoft);
     }
+    VX.fill(62, G + 8, 42, 86, G + 8, 43, B.blRoof);
     for (let z = 42; z <= 64; z++) {
-      VX.fill(62, G + 1, z, 62, G + 5, z, B.stoneSoft);
-      VX.fill(86, G + 1, z, 86, G + 5, z, B.stoneSoft);
+      VX.fill(62, G + 1, z, 62, G + 5, z, z % 5 === 0 ? B.blGlass : B.stoneSoft);
+      VX.fill(86, G + 1, z, 86, G + 5, z, z % 5 === 0 ? B.blGlass : B.stoneSoft);
     }
-    // 复盘大屏（z=43）+ 顶红警灯
+    for (const px of [62, 74, 86]) VX.fill(px, G + 1, 42, px, G + 7, 42, B.obsidian);
+    // 复盘大屏（z=43）+ 顶红警灯 + 西侧书柜 + 东侧整排机柜
     VX.fill(69, G + 2, 43, 79, G + 6, 43, B.obsidian);
     VX.fill(70, G + 3, 43, 78, G + 5, 43, B.bannerBlue);
     VX.set(69, G + 7, 43, B.redlamp); VX.set(79, G + 7, 43, B.redlamp);
-    // 长会议桌与机柜（桌高一格，不挡后排和前排人物视线）
+    VX.fill(63, G + 1, 44, 63, G + 4, 49, B.books);
+    // 长会议桌与座椅（高1格不挡人物）
     VX.fill(68, G + 1, 52, 80, G + 1, 53, B.plankSoft);
-    VX.fill(83, G + 1, 45, 85, G + 4, 49, B.iron);
-    VX.set(83, G + 3, 46, B.monitor); VX.set(83, G + 3, 48, B.redlamp);
+    for (const cx of [70, 74, 78]) { VX.set(cx, G + 1, 50, B.iron); VX.set(cx, G + 1, 55, B.iron); }
+    VX.fill(83, G + 1, 44, 85, G + 5, 51, B.blServer);
+    VX.set(83, G + 3, 46, B.monitor); VX.set(83, G + 3, 48, B.redlamp); VX.set(83, G + 4, 50, B.monitor);
     putLamp(65, G + 3, 46, AMBER, 8, 1.1);
     putLamp(83, G + 3, 59, AMBER, 8, 1.1);
     putLamp(65, G + 3, 59, AMBER, 8, 1.1);
 
-    // 4. 区3 SITE：前端部门底座（可被 VX.edit 炸毁）+ 流沙三栋危楼工地 + 测试台
-    VX.fill(90, G, 36, 122, G, 54, B.stoneSoft);
-    VX.fill(101, G, 39, 119, G, 48, B.sand); // 流沙坑
-    // 初始前端部（玻璃开放前墙，看得见里面的人）
+    // 4. 区3 SITE：玻璃斜顶前端部 + 警示围栏流沙坑 + 塔吊工地 + 砖墙测试台
+    VX.fill(90, G, 36, 124, G, 56, B.blPlaza);
+    VX.fill(101, G, 39, 119, G, 48, B.sand);
+    for (let x = 101; x <= 119; x++) { if (x % 3 === 0) VX.set(x, G + 1, 39, B.blWarn); VX.set(x, G + 1, 48, x % 3 === 0 ? B.blWarn : 0); }
+    // 前端部
     VX.fill(92, G + 1, 40, 98, G + 1, 46, B.floorSoft);
     VX.fill(92, G + 2, 40, 92, G + 4, 46, B.bannerOrange);
     VX.fill(98, G + 2, 40, 98, G + 4, 46, B.bannerOrange);
+    for (const x of [92, 98]) for (const z of [40, 46]) VX.fill(x, G + 2, z, x, G + 5, z, B.obsidian);
     VX.fill(92, G + 2, 40, 98, G + 5, 40, B.paperSoft);
-    VX.fill(92, G + 5, 40, 98, G + 5, 46, B.plankSoft);
-    // 三个工地基座 (x = 104, 110, 116)
+    VX.fill(94, G + 3, 40, 96, G + 4, 40, B.blGlass);
+    VX.fill(91, G + 5, 39, 99, G + 5, 47, B.blRoof);
+    // 三个工地基座 + 黄色工程塔吊
     for (const tx of [104, 110, 116]) {
       VX.fill(tx - 1, G + 1, 42, tx + 1, G + 1, 45, B.sand);
-      VX.fill(tx - 1, G + 2, 42, tx + 1, G + 2, 45, B.stoneSoft);
+      VX.fill(tx - 1, G + 2, 42, tx + 1, G + 2, 45, B.blWarn);
     }
-    // 测试台与东墙西墙演示墙 (x = 114..124, z = 54)
-    VX.fill(113, G + 1, 52, 113, G + 4, 56, B.brickSoft); // 西墙
-    VX.fill(123, G + 1, 52, 123, G + 4, 56, B.brickSoft); // 东墙
+    VX.fill(121, G + 1, 41, 122, G + 2, 42, B.iron);
+    VX.fill(121, G + 3, 41, 121, G + 10, 41, B.goldblk);
+    VX.fill(115, G + 10, 41, 123, G + 10, 41, B.goldblk);
+    VX.fill(116, G + 8, 41, 116, G + 9, 41, B.iron); VX.set(116, G + 7, 41, B.blWarn);
+    // 测试台与砖柱墙
+    VX.fill(113, G + 1, 52, 113, G + 4, 56, B.brick);
+    VX.fill(123, G + 1, 52, 123, G + 4, 56, B.brick);
+    VX.fill(113, G + 5, 52, 113, G + 5, 56, B.obsidian);
+    VX.fill(123, G + 5, 52, 123, G + 5, 56, B.obsidian);
     VX.fill(117, G + 1, 53, 119, G + 1, 53, B.plankSoft);
     VX.set(118, G + 2, 53, B.monitor);
-    putLamp(94, G + 2, 50, AMBER, 7, 1.0);
-    putLamp(118, G + 2, 48, AMBER, 8, 1.0);
+    putLamp(94, G + 3, 50, AMBER, 7, 1.0);
+    putLamp(119, G + 3, 49, AMBER, 8, 1.0);
 
-    // 5. 区4 DATA：双楼对照台（2025 50% 承重墙 vs 2026 99% 危楼）+ Sonar/GitClear 柱阵底座
-    VX.fill(124, G, 38, 154, G, 76, B.bannerBlue);
-    VX.fill(126, G, 40, 152, G, 74, B.stoneSoft);
-    // 左楼 2025 承重墙核（开放采光窗 + 四角粗壮金柱极稳）
+    // 5. 区4 DATA：金色飞檐 2025 承重塔 vs 警示脆壳 2026 危楼 + 数据柱基座
+    VX.fill(124, G, 38, 154, G, 76, B.iron);
+    VX.fill(125, G, 39, 153, G, 75, B.blPlaza);
+    // 2025 承重墙核
     VX.fill(128, G + 1, 41, 132, G + 1, 45, B.iron);
-    for (const cx of [128, 132]) for (const cz of [41, 45]) VX.fill(cx, G + 2, cz, cx, G + 7, cz, B.goldblk);
-    VX.fill(129, G + 2, 42, 131, G + 6, 44, B.paperSoft);
+    for (const cx of [128, 132]) for (const cz of [41, 45]) VX.fill(cx, G + 2, cz, cx, G + 7, cz, B.blPillar);
+    VX.fill(129, G + 2, 42, 131, G + 6, 44, B.blGlass);
     VX.fill(128, G + 8, 41, 132, G + 8, 45, B.obsidian);
-    // 右楼 2026 99% 空心危楼（缺口镂空看得见内部空心 + TNT）
+    VX.fill(129, G + 9, 42, 131, G + 9, 44, B.goldblk);
+    // 2026 空心危楼
     VX.fill(137, G + 1, 41, 141, G + 1, 45, B.sand);
     VX.fill(137, G + 2, 41, 141, G + 7, 45, B.worange);
-    VX.fill(138, G + 2, 41, 140, G + 6, 45, 0); // 前后透空露出空心壳
-    VX.set(139, G + 2, 43, B.tnt); VX.set(137, G + 5, 41, B.wred); VX.set(141, G + 6, 41, B.tnt);
+    VX.fill(138, G + 2, 41, 140, G + 6, 45, 0);
+    VX.set(139, G + 2, 43, B.tnt); VX.set(137, G + 4, 41, B.blWarn); VX.set(141, G + 6, 41, B.tnt);
     VX.fill(137, G + 7, 41, 141, G + 7, 45, B.wred);
-    // 数据柱阵底座 (x = 139, 143, 147, z = 61..63 -> 留在画面右半边，不挡左侧大卡片)
-    for (const px of [139, 143, 147]) VX.fill(px - 1, G + 1, 61, px + 1, G + 1, 63, B.iron);
-    putLamp(127, G + 2, 54, WARM, 8, 1.05);
-    putLamp(149, G + 2, 54, WARM, 8, 1.05);
-    putLamp(142, G + 2, 71, AMBER, 8, 1.15);
-
-    // 6. 区5 RELAY & OFFICE：AI 接力套娃车间 + 运营财务策划办公排
-    VX.fill(62, G, 70, 88, G, 94, B.stoneSoft);
-    // AI 传送带与两座工作台
-    for (let x = 67; x <= 81; x++) VX.set(x, G + 1, 82, B.rail);
-    VX.fill(66, G + 1, 80, 68, G + 1, 84, B.iron);
-    VX.fill(80, G + 1, 80, 82, G + 1, 84, B.iron);
-    // 门朝天歪斜高楼底座 (74, 74)
-    VX.fill(72, G + 1, 72, 76, G + 1, 76, B.sand);
-    putLamp(64, G + 2, 88, AMBER, 8, 1.05);
-    putLamp(85, G + 2, 88, AMBER, 8, 1.05);
-
-    // 办公排 OFFICE (x=125..147, z=84..92)
-    VX.fill(123, G, 79, 149, G, 96, B.stoneSoft);
-    for (const dx of [127, 135, 143]) {
-      VX.fill(dx - 2, G + 1, 86, dx + 2, G + 1, 86, B.plankSoft);
-      VX.set(dx, G + 2, 86, B.monitor);
+    // 数据柱基座
+    for (const px of [139, 143, 147]) {
+      VX.fill(px - 1, G + 1, 61, px + 1, G + 1, 63, B.iron);
+      VX.set(px - 1, G + 1, 61, B.goldblk); VX.set(px + 1, G + 1, 63, B.goldblk);
     }
-    // 金库保险箱（公司账本）
-    VX.fill(143, G + 1, 79, 146, G + 4, 82, B.iron);
-    VX.fill(144, G + 2, 79, 145, G + 3, 79, B.goldblk);
-    putLamp(124, G + 2, 91, WARM, 7, 1.0);
-    putLamp(147, G + 2, 91, WARM, 7, 1.0);
+    putLamp(127, G + 3, 54, WARM, 8, 1.05);
+    putLamp(149, G + 3, 54, WARM, 8, 1.05);
+    putLamp(151, G + 3, 70, AMBER, 8, 1.15);
 
-    // 7. 区6 IRON：三条铁律车间（承重墙框 + 关AI台 + 物理隔离双机房）
-    VX.fill(92, G, 60, 118, G, 76, B.bannerBlue);
-    VX.fill(94, G, 62, 116, G, 74, B.stoneSoft);
-    // 铁律1：承重框架 (x=96..98, z=66..68)
+    // 6. 区5 RELAY & OFFICE：拱门流水线车间 + 精细办公工位 + 金库
+    VX.fill(62, G, 70, 88, G, 94, B.blPlaza);
+    for (let x = 67; x <= 81; x++) VX.set(x, G + 1, 82, B.rail);
+    VX.fill(66, G + 1, 80, 68, G + 1, 84, B.iron); VX.set(67, G + 2, 82, B.chest);
+    VX.fill(80, G + 1, 80, 82, G + 1, 84, B.iron); VX.set(81, G + 2, 82, B.chest);
+    // 流水线后置龙门框（两侧立柱不遮挡镜头正面）
+    VX.fill(70, G + 1, 79, 70, G + 5, 79, B.iron);
+    VX.fill(78, G + 1, 79, 78, G + 5, 79, B.iron);
+    VX.fill(70, G + 5, 79, 78, G + 5, 79, B.blWarn); VX.set(74, G + 5, 79, B.monitor);
+    // 门朝天高楼基座
+    VX.fill(72, G + 1, 72, 76, G + 1, 76, B.sand);
+    putLamp(64, G + 3, 88, AMBER, 8, 1.05);
+    putLamp(85, G + 3, 88, AMBER, 8, 1.05);
+
+    // 办公排 OFFICE
+    VX.fill(123, G, 79, 149, G, 96, B.blPlaza);
+    VX.fill(125, G + 1, 81, 139, G + 3, 81, B.books);
+    for (const dx of [127, 135, 143]) {
+      VX.fill(dx - 2, G + 1, 84, dx + 2, G + 1, 84, B.plankSoft);
+      VX.set(dx - 2, G + 1, 83, B.iron); VX.set(dx + 2, G + 1, 83, B.iron);
+      VX.set(dx, G + 2, 84, B.monitor);
+    }
+    // 金库保险箱
+    VX.fill(142, G + 1, 79, 147, G + 5, 83, B.iron);
+    VX.fill(142, G + 1, 79, 142, G + 5, 79, B.blPillar); VX.fill(147, G + 1, 79, 147, G + 5, 79, B.blPillar);
+    VX.fill(144, G + 2, 79, 145, G + 3, 79, B.goldblk);
+    VX.set(143, G + 1, 84, B.chest); VX.set(146, G + 1, 84, B.chest);
+    putLamp(124, G + 3, 91, WARM, 7, 1.0);
+    putLamp(148, G + 3, 91, WARM, 7, 1.0);
+
+    // 7. 区6 IRON：三条铁律车间（金柱拱廊 + 光纤走线 + 双机房观察窗）
+    VX.fill(92, G, 60, 118, G, 76, B.iron);
+    VX.fill(93, G, 61, 117, G, 75, B.blPlaza);
+    for (const cx of [93, 117]) for (const cz of [61, 75]) VX.fill(cx, G + 1, cz, cx, G + 4, cz, B.blPillar);
+    for (let x = 96; x <= 114; x++) VX.set(x, G, 68, B.blCable);
+    // 铁律1：承重框架
     VX.fill(96, G + 1, 66, 98, G + 1, 68, B.goldblk);
-    // 铁律2：黑屏断网演讲台 (x=104, z=67)
-    VX.fill(103, G + 1, 66, 105, G + 1, 67, B.plankSoft);
-    VX.set(104, G + 2, 66, B.offlamp);
-    // 铁律3：测试库 vs 生产库 + 中间黑曜石防火墙 (x=112)
-    VX.fill(109, G + 1, 65, 110, G + 3, 67, B.wred);      // 测试库
-    VX.fill(112, G + 1, 64, 112, G + 5, 69, B.obsidian);  // 物理隔离墙
-    VX.fill(112, G + 5, 64, 112, G + 5, 69, B.goldblk);
-    VX.fill(114, G + 1, 65, 115, G + 3, 67, B.goldblk);   // 生产库
-    putLamp(92, G + 2, 74, WARM, 7, 1.1);
-    putLamp(117, G + 2, 74, WARM, 7, 1.1);
+    // 铁律2：黑屏演讲台（后置 z=64，不遮前方老板/黑哥走位）
+    VX.fill(103, G + 1, 64, 105, G + 1, 64, B.plankSoft);
+    VX.set(104, G + 2, 64, B.offlamp);
+    // 铁律3：测试库 vs 生产库 + 防火观察墙
+    VX.fill(109, G + 1, 63, 110, G + 3, 65, B.blServer);
+    VX.set(109, G + 4, 64, B.redlamp); VX.set(110, G + 4, 64, B.redlamp);
+    VX.fill(112, G + 1, 63, 112, G + 5, 66, B.obsidian);
+    VX.fill(112, G + 2, 64, 112, G + 4, 65, B.blGlass);
+    VX.fill(112, G + 5, 63, 112, G + 5, 66, B.goldblk);
+    VX.fill(114, G + 1, 63, 115, G + 3, 65, B.blServer);
+    VX.fill(114, G + 4, 63, 115, G + 4, 65, B.goldblk);
+    putLamp(92, G + 3, 74, WARM, 7, 1.1);
+    putLamp(117, G + 3, 74, WARM, 7, 1.1);
 
     for (const [t, x, y, z, nm] of VXE) VX.edit(t, x, y, z, resolveBlk(nm));
     BUILT = true;
@@ -266,20 +420,24 @@
     const key = [role, mood, ph, blind ? 1 : 0].join('|');
     if (pplCache.has(key)) return pplCache.get(key);
     const R = PC[role] || PC.开发, s = new Spr(), H = -92, SK = mood === 'panic' ? '#E8B8A2' : '#E2B694', SKD = '#C69672', D = '#261816';
-    // 腿脚
-    const step = ph % 2 && mood === 'walk' ? 2 : 0;
-    s.rect(-10, -14 + step, 8, 14 - step, '#221E2E').rect(2, -14 - step, 8, 14 + step, '#181422');
-    // 身体与衣领
-    s.rect(-14, -56, 28, 42, R.c1).rect(6, -56, 8, 42, R.c2).rect(-16, -50, 32, 8, R.c2).rect(-6, -56, 12, 8, SK);
-    if (R.tie) s.rect(-2, -52, 4, 24, R.tie);
-    // 手臂（举手投降/甩手/拿喷枪/指责）
-    if (mood === 'point') s.rect(-22, -52, 8, 10, R.c1).rect(14, -54, 14, 7, R.c1);
-    else if (mood === 'panic' || mood === 'handsup') s.rect(-20, -68, 7, 22, R.c1).rect(13, -68, 7, 22, R.c2);
-    else s.rect(-19, -50, 5, 22, R.c1).rect(14, -50, 5, 22, R.c2);
-    // 头与发型
-    s.rect(-12, H, 24, 36, SK).rect(6, H, 6, 36, SKD).rect(-12, H, 24, 8, R.hair);
-    if (R.cap) s.rect(-13, H - 3, 26, 8, R.cap).rect(-13, H + 3, 28, 3, '#E8A93A');
-    // 五官
+    // 腿脚与鞋底
+    const step = (mood === 'walk' && ph % 2) ? 3 : 0;
+    s.rect(-10, -16 + step, 8, 12 - Math.min(4, step), '#221E2E').rect(2, -16 - step, 8, 12 + Math.min(4, step), '#181422');
+    s.rect(-11, -5 + step, 9, 5, '#12101A').rect(2, -5 - step, 9, 5, '#12101A').rect(-10, -2 + step, 7, 1, '#3A364C').rect(3, -2 - step, 7, 1, '#3A364C');
+    // 身体、衬衫、翻领、腰带与口袋
+    s.rect(-14, -56, 28, 40, R.c1).rect(6, -56, 8, 40, R.c2).rect(-16, -50, 32, 7, R.c2).rect(-6, -56, 12, 8, SK);
+    s.rect(-4, -54, 8, 14, '#E8EAF4').rect(-6, -54, 2, 12, '#2A253C').rect(4, -54, 2, 12, '#2A253C');
+    if (R.tie) s.rect(-2, -52, 4, 22, R.tie).rect(-1, -51, 2, 4, '#FF7A7A');
+    s.rect(-14, -20, 28, 4, '#181422').rect(-3, -20, 6, 4, '#E8A93A').rect(6, -42, 6, 5, '#1E1A2E');
+    // 手臂（投降/指责/走路摆臂/打字敲键盘）
+    if (mood === 'point') s.rect(-22, -52, 8, 10, R.c1).rect(14, -54, 15, 7, R.c1).rect(27, -54, 3, 6, SK);
+    else if (mood === 'panic' || mood === 'handsup') s.rect(-20, -68, 7, 22, R.c1).rect(13, -68, 7, 22, R.c2).rect(-20, -72, 6, 4, SK).rect(14, -72, 6, 4, SKD);
+    else if (mood === 'type') { const dy = ph % 2 ? -3 : 0; s.rect(-19, -46 + dy, 6, 16, R.c1).rect(13, -49 - dy, 6, 16, R.c2).rect(-17, -31 + dy, 6, 4, SK).rect(11, -34 - dy, 6, 4, SKD); }
+    else { const sw = mood === 'walk' ? (ph % 2 ? 4 : -4) : 0; s.rect(-19, -50 + sw, 5, 22, R.c1).rect(-19, -30 + sw, 5, 3, SK).rect(14, -50 - sw, 5, 22, R.c2).rect(14, -30 - sw, 5, 3, SKD); }
+    // 头、发型高光与鬓角
+    s.rect(-12, H, 24, 36, SK).rect(6, H, 6, 36, SKD).rect(-12, H, 24, 8, R.hair).rect(-13, H + 2, 2, 10, R.hair).rect(11, H + 2, 2, 10, R.hair).rect(-9, H + 1, 10, 2, '#5E6478');
+    if (R.cap) s.rect(-13, H - 3, 26, 8, R.cap).rect(-13, H + 3, 28, 3, '#E8A93A').rect(-8, H - 2, 8, 2, '#FFF2B8');
+    // 五官与反光眼镜
     const ey = H + 15;
     if (blind) {
       s.rect(-13, ey - 2, 26, 8, '#1A1428').rect(-10, ey + 1, 20, 2, '#E83A44');
@@ -292,7 +450,7 @@
     } else {
       s.rect(-9, ey, 5, 4, '#FFFFFF').rect(4, ey, 5, 4, '#FFFFFF').rect(-6, ey + 1, 2, 3, '#263858').rect(5, ey + 1, 2, 3, '#263858');
     }
-    if (R.glasses && !blind) s.rect(-11, ey - 1, 9, 6, 'rgba(0,0,0,0)').rect(-11, ey - 2, 9, 1, '#1A1428').rect(2, ey - 2, 9, 1, '#1A1428').rect(-2, ey, 4, 1, '#1A1428');
+    if (R.glasses && !blind) s.rect(-11, ey - 2, 9, 1, '#1A1428').rect(2, ey - 2, 9, 1, '#1A1428').rect(-11, ey + 5, 9, 1, '#1A1428').rect(2, ey + 5, 9, 1, '#1A1428').rect(-2, ey, 4, 1, '#1A1428').rect(-10, ey, 2, 1, '#B8E6FF').rect(3, ey, 2, 1, '#B8E6FF');
     if (mood === 'angry' || mood === 'point') s.line(-10, ey - 5, -3, ey - 2, D).line(10, ey - 5, 3, ey - 2, D);
     else s.rect(-10, ey - 4, 20, 2, D);
     if (R.beard) s.rect(-8, H + 30, 16, 6, '#B8BAC8');
@@ -314,16 +472,20 @@
     if (ex.tag !== false) TAGS.push([x, y + 2.05, z, ex.tag || role, ex.tagCol]);
   }
 
-  // 自定义像素道具（铁锅、大饼、AI喷枪、金币、文件、炸弹、咖啡杯）
+  // 自定义精细像素道具（铁锅、大饼、AI喷枪、金币、文件、炸弹、墨镜、咖啡、盾牌、闹钟、扳手）
   const PROPS = {};
   const mkProp = (fn, w = 48, h = 48, ox = 24, oy = 42) => VX.capture((X, Y) => { const s = new Spr(); fn(s); s.outline('#140A10'); s.draw(X, Y); }, w, h, ox, oy);
-  PROPS.pot = mkProp(s => { s.rect(-14, -14, 28, 12, '#343A4A').rect(-16, -16, 32, 4, '#566078').rect(14, -13, 8, 3, '#222634').rect(-6, -10, 12, 3, '#E83A44'); }, 52, 28, 26, 20);
-  PROPS.pie = mkProp(s => { s.ell(0, -14, 15, 14, '#E8A93A').ell(0, -14, 11, 10, '#FFD43B').ell(-4, -17, 3, 2, '#FFF2C0'); }, 44, 34, 22, 30);
-  PROPS.gun = mkProp(s => { s.rect(-14, -12, 22, 9, '#3A3550').rect(8, -10, 10, 5, '#72C9FE').rect(-8, -3, 6, 8, '#1A1428').rect(-12, -16, 12, 4, '#FFD43B'); }, 54, 32, 26, 26);
-  PROPS.coin = mkProp(s => { s.ell(0, -10, 8, 8, '#E8A93A').ell(0, -10, 5, 5, '#FFD43B').rect(-1, -13, 2, 6, '#B8781A'); }, 24, 24, 12, 20);
-  PROPS.doc = mkProp(s => { s.rect(-8, -22, 16, 22, '#F2E6C8').rect(-5, -18, 10, 2, '#3A3550').rect(-5, -13, 10, 2, '#7A748A').rect(-5, -8, 7, 2, '#E83A44'); }, 26, 28, 13, 25);
-  PROPS.bomb = mkProp(s => { s.ell(0, -10, 10, 10, '#221E2C').rect(-3, -22, 6, 4, '#5A5468').rect(1, -26, 3, 4, '#E8A93A').rect(3, -28, 4, 4, '#FF6A5A'); }, 32, 34, 16, 30);
-  PROPS.shades = mkProp(s => { s.rect(-12, -6, 10, 6, '#140A10').rect(2, -6, 10, 6, '#140A10').rect(-2, -5, 4, 2, '#140A10').rect(-10, -4, 3, 1, '#FFFFFF'); }, 32, 16, 16, 12);
+  PROPS.pot = mkProp(s => { s.rect(-14, -14, 28, 12, '#343A4A').rect(-16, -16, 32, 4, '#687492').rect(-14, -15, 10, 2, '#A8B4D4').rect(14, -13, 8, 3, '#222634').rect(18, -13, 4, 3, '#D8A84E').rect(-6, -10, 12, 4, '#E83A44'); }, 54, 28, 26, 20);
+  PROPS.pie = mkProp(s => { s.ell(0, -14, 15, 14, '#D88E2E').ell(0, -14, 12, 11, '#FFD43B').ell(-4, -17, 4, 2, '#FFF5CC').rect(3, -12, 3, 2, '#C87822').rect(-6, -10, 2, 2, '#C87822'); }, 44, 34, 22, 30);
+  PROPS.gun = mkProp(s => { s.rect(-14, -12, 22, 10, '#3A3550').rect(-12, -10, 16, 3, '#585278').rect(8, -10, 10, 5, '#72C9FE').rect(15, -11, 4, 7, '#FFFFFF').rect(-8, -2, 6, 8, '#1A1428').rect(-12, -16, 12, 4, '#FFD43B'); }, 56, 32, 26, 26);
+  PROPS.coin = mkProp(s => { s.ell(0, -10, 9, 9, '#C88424').ell(0, -10, 7, 7, '#FFD43B').rect(-2, -14, 2, 8, '#FFF2B8').rect(1, -14, 2, 8, '#B8781A'); }, 26, 26, 13, 21);
+  PROPS.doc = mkProp(s => { s.rect(-7, -23, 16, 22, '#D8CAB0').rect(-9, -21, 16, 22, '#F4E8CC').rect(-6, -18, 10, 2, '#3A3550').rect(-6, -13, 10, 2, '#7A748A').rect(-6, -8, 7, 2, '#E83A44'); }, 30, 30, 15, 26);
+  PROPS.bomb = mkProp(s => { s.ell(0, -10, 10, 10, '#221E2C').rect(-5, -15, 4, 4, '#5C5672').rect(-3, -22, 6, 4, '#D49C38').rect(1, -26, 3, 4, '#A87248').rect(3, -29, 4, 4, '#FF6A5A').rect(5, -28, 2, 2, '#FFD43B'); }, 34, 36, 17, 31);
+  PROPS.shades = mkProp(s => { s.rect(-12, -6, 10, 6, '#140A10').rect(2, -6, 10, 6, '#140A10').rect(-2, -5, 4, 2, '#140A10').rect(-10, -4, 3, 1, '#FFFFFF').rect(4, -4, 3, 1, '#FFFFFF'); }, 32, 16, 16, 12);
+  PROPS.coffee = mkProp(s => { s.rect(-6, -14, 12, 13, '#F4E8CC').rect(6, -11, 4, 7, '#D8CAB0').rect(-5, -14, 10, 3, '#4E2C1A').rect(-2, -19, 2, 3, '#B8E6FF').rect(2, -21, 2, 3, '#FFFFFF'); }, 28, 28, 14, 24);
+  PROPS.shield = mkProp(s => { s.rect(-9, -20, 18, 14, '#343A50').rect(-7, -18, 14, 11, '#E8A93A').rect(-5, -16, 10, 7, '#FFD43B').rect(-5, -6, 10, 4, '#E8A93A').rect(-2, -2, 4, 2, '#D49C38').rect(-4, -15, 3, 4, '#FFF2B8'); }, 30, 30, 15, 26);
+  PROPS.clock = mkProp(s => { s.ell(0, -10, 9, 9, '#E8A93A').ell(0, -10, 7, 7, '#F4E8CC').rect(-1, -15, 2, 6, '#1A1428').rect(0, -11, 5, 2, '#E83A44').rect(-8, -20, 4, 3, '#FFD43B').rect(4, -20, 4, 3, '#FFD43B'); }, 28, 28, 14, 24);
+  PROPS.wrench = mkProp(s => { s.line(-8, -4, 6, -18, '#A8B0C8').line(-7, -3, 7, -17, '#566078').rect(4, -21, 7, 7, '#D8DCE8').rect(7, -19, 3, 3, '#222634'); }, 28, 28, 14, 24);
   const prop = (x, y, z, name, ex = {}) => { if (PROPS[name]) VX.sprite(PROPS[name], x, y, z, { k: ex.k ?? .022 }); };
 
   function burst(t, t0, x, y, z, col = [255, 212, 59], n = 16) {
@@ -332,6 +494,32 @@
       const a = i / n * Math.PI * 2 + hh(i, 3) * .5, spd = 1.8 + hh(i, 5) * 2.8;
       VX.pt(x + Math.cos(a) * spd * dt, y + (1.2 + hh(i, 9) * 1.5) * dt - 3.6 * dt * dt, z + Math.sin(a) * spd * dt, .11 * (1 - dt), col, true);
     }
+  }
+  function orbitSparks(t, x, y, z, r = .7, col = [255, 212, 59], n = 5, spd = 3.2, sz = .07) {
+    for (let i = 0; i < n; i++) {
+      const a = t * spd + i * Math.PI * 2 / n;
+      VX.pt(x + Math.cos(a) * r, y + Math.sin(a * 2 + i) * .12, z + Math.sin(a) * r, sz, col, true);
+    }
+  }
+  function riseSparks(t, x, y, z, w = 1.2, h = 2.6, col = [255, 212, 59], n = 10, spd = 1.1, sz = .07) {
+    for (let i = 0; i < n; i++) {
+      const p = (t * spd + hh(i, 11)) % 1;
+      VX.pt(x + (hh(i, 3) - .5) * w + Math.sin(t * 2 + i) * .15, y + p * h, z + (hh(i, 7) - .5) * w, sz * (1 - .4 * p), col, true);
+    }
+  }
+  function ringPulse(t, period, x, y, z, maxR = 2.8, col = [255, 90, 90], n = 16, sz = .08) {
+    const p = (t % period) / period, r = .3 + p * maxR;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2 + t * .4;
+      VX.pt(x + Math.cos(a) * r, y + .15 * (1 - p), z + Math.sin(a) * r, sz * (1 - p * .65), col, true);
+    }
+  }
+  function projArc(t, t0, t1, x0, y0, z0, x1, y1, z1, arcH = 1.2, col = [114, 201, 254], sz = .10) {
+    if (t < t0 || t > t1) return;
+    const p = clamp01((t - t0) / Math.max(1e-4, t1 - t0));
+    const px = lerp(x0, x1, p), py = lerp(y0, y1, p) + Math.sin(p * Math.PI) * arcH, pz = lerp(z0, z1, p);
+    VX.pt(px, py, pz, sz, col, true);
+    if (p > .08) VX.pt(lerp(x0, x1, p - .06), lerp(y0, y1, p - .06) + Math.sin((p - .06) * Math.PI) * arcH, lerp(z0, z1, p - .06), sz * .6, col, true);
   }
   function sweat(t, x, y, z) {
     for (let i = 0; i < 3; i++) {
@@ -603,7 +791,7 @@
   // ======================================================================================= 注册 LOOPS.pxBaolei
   function LOOP(t) {
     if (!BUILT) buildWorld();
-    VX.setMip(1.5);
+    VX.setMip(1.25);
     VX.setMoonDir([-.7, .35, .55]);
     TAGS.length = 0; BUBS.length = 0; LBLS.length = 0;
 
@@ -615,13 +803,13 @@
     }
     const ang = look(cam.p, cam.q);
     const camPose = {
-      x: cam.p[0] + shakeX + .02 * Math.sin(t * 1.2),
-      y: cam.p[1] + shakeY + .015 * Math.sin(t * 1.6),
+      x: cam.p[0] + shakeX + .035 * Math.sin(t * 1.15),
+      y: cam.p[1] + shakeY + .022 * Math.sin(t * 1.55),
       z: cam.p[2],
-      yaw: ang.yaw + .003 * Math.sin(t * .9),
-      pitch: ang.pitch,
+      yaw: ang.yaw + .0045 * Math.sin(t * .85),
+      pitch: ang.pitch + .002 * Math.cos(t * 1.1),
       fov: cam.fov || 60,
-      roll: .004 * Math.sin(t * .7),
+      roll: .005 * Math.sin(t * .7),
     };
 
     VX.setDay(S && S.day !== undefined ? (typeof S.day === 'function' ? S.day(t) : S.day) : DUSK);
@@ -639,8 +827,8 @@
     dust(t, camPose);
     VX.draw();
   }
-  LOOP.res = [320, 180];
-  LOOP.px = 6;
+  LOOP.res = [480, 270];
+  LOOP.px = 4;
   LOOP.len = D.len || 448;
   LOOP.overlay = (c, t) => {
     post(c, t);
@@ -657,7 +845,7 @@
 
   window.BAOLEI = {
     B, G, VX, D, K, shot, P, A, AT, PE, LS, LE, sfx, edit, fillEdit, flash,
-    heige, clawd, model, ppl, prop, bubble, label, burst, sweat, sprayStream, rainCloud,
+    heige, clawd, model, ppl, prop, bubble, label, burst, orbitSparks, riseSparks, ringPulse, projArc, sweat, sprayStream, rainCloud,
     seg01, sm, lerp, hh, clamp01, fadeIO, outlined, panel, tagUI, slam, toast, stamp,
     lossUI, ratioBar, metricCard, codeWall, ruleCard, questionCard, signOff,
     HOST, WAR, SITE, DATA, RELAY, OFFICE, IRON,

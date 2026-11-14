@@ -2,7 +2,7 @@
 (() => {
   const N = window.BAOLEI;
   const { B, G, VX, K, shot, P, A, AT, sfx, edit, fillEdit, flash,
-    heige, clawd, model, ppl, prop, bubble, label, burst, sweat, sprayStream,
+    heige, clawd, model, ppl, prop, bubble, label, burst, orbitSparks, riseSparks, ringPulse, projArc, sweat, sprayStream, rainCloud,
     seg01, sm, lerp, hh, clamp01, fadeIO, outlined, panel, tagUI, slam, toast, stamp, ratioBar,
     RELAY, OFFICE, WAR, IRON, AMBER, WARM, ALARM, ICE, DUSK, NIGHT, DAY } = N;
 
@@ -21,18 +21,30 @@
     if (i === 7) edit(tt, 74 + dx, by + 1, 73, 'goldblk'); // 朝天的门牌
   }
   const drawD1Act = (t, m2) => {
-    ppl(65.6, G + 1, 82, '老板', m2 ? 'shock' : 'happy', t, { tag: '领导 (只丢点子)', tagCol: '#FFD34E' });
-    clawd(68.2, G + 2, 82, { ...feel('happy', t) }, { k: .015 });
-    model('deepseek', 68.2, G + 2, 80.2, 'happy', t, { k: .017 });
-    ppl(82.0, G + 1, 82, '开发', m2 ? 'dizzy' : 'closed', t, { flip: true, tag: '开发 (原封转发)', tagCol: '#72C9FE' });
-    model('doubao', 79.4, G + 2, 82, 'happy', t, { k: .018 });
+    const hv = Math.sin(t * 4.2) * .14;
+    ppl(66.2, G + 2, 83.5, '老板', m2 ? 'shock' : 'happy', t, { dy: bob(t, 7, .05), tag: '领导 (只丢点子)', tagCol: '#FFD34E' });
+    clawd(68.2, G + 2 + hv, 82, { ...feel('happy', t) }, { k: .015 });
+    model('deepseek', 68.2, G + 2 - hv, 80.2, 'happy', t, { k: .017 });
+    ppl(81.8, G + 2, 83.5, '开发', m2 ? 'dizzy' : 'closed', t, { flip: true, shake: m2, tag: '开发 (原封转发)', tagCol: '#72C9FE' });
+    model('doubao', 79.4, G + 2 + hv, 82, 'happy', t, { k: .018 });
+    // 传送带源源不断运送文件与方块包
+    for (let i = 0; i < 3; i++) {
+      const cx = lerp(67.5, 80.5, (t * .55 + i / 3) % 1);
+      prop(cx, G + 2.1 + Math.sin(t * 7 + i) * .08, 82, 'doc', { k: .022 });
+    }
     const ph = ((t * 1.4) % 2);
     const bx = ph < 1 ? lerp(69.2, 78.4, ph) : lerp(78.4, 69.2, ph - 1);
-    prop(bx, G + 2.5 + Math.sin(t * 8) * .15, 82, 'doc', { k: .028 });
-    if (t >= T_ALLAI && !m2) sprayStream(t, 74, G + 2.5, 81.5, 74, G + 6.5, 74.5, [118, 198, 255]);
+    prop(bx, G + 2.8 + Math.sin(t * 8) * .18, 82, 'doc', { k: .028 });
+    riseSparks(t, 74, G + 2.2, 82, 10, 2.8, [114, 201, 254], 10, 1.1, .06);
+    if (t >= T_ALLAI && !m2) {
+      sprayStream(t, 74, G + 2.5, 81.5, 74, G + 6.5, 74.5, [118, 198, 255]);
+      orbitSparks(t, 74, G + 6.2, 74.5, 1.4, [255, 212, 59], 5, 3.0, .07);
+    }
     if (m2) {
       label(74, G + 11.4, 74, '[!] 大门朝哪儿开?!', 38, '#FF5A5A', t, T_MON2, D2);
-      prop(74, G + 9.4, 73.2, 'bomb', { k: .052 });
+      prop(74, G + 9.4 + Math.sin(t * 9) * .12, 73.2, 'bomb', { k: .052 });
+      ringPulse(t, 1.1, 74, G + 9.4, 73.2, 3.6, [255, 86, 70], 16, .08);
+      riseSparks(t, 74, G + 4, 74, 3.2, 5.5, [255, 96, 80], 14, 1.3, .08);
     }
   };
   const d1Lights = t => {
@@ -43,9 +55,9 @@
   shot(A('你以为这就够魔幻了'), T_BOSS, {
     day: DUSK, fog: [55, 165],
     keys: [
-      K(A('你以为这就够魔幻了'), [71, G + 4.6, 95], [73, G + 2.6, 82], 64),
-      K(T_GRP, [74, G + 4.8, 95], [74, G + 2.8, 82], 64),
-      K(T_BOSS, [77, G + 4.6, 95], [75, G + 2.6, 82], 64),
+      K(A('你以为这就够魔幻了'), [72.0, G + 4.8, 97.5], [73.5, G + 2.6, 82], 68),
+      K(T_GRP, [74.0, G + 5.0, 97.5], [74.0, G + 2.8, 82], 68),
+      K(T_BOSS, [77.0, G + 4.6, 95.5], [75.0, G + 2.6, 82], 64),
     ],
     lights: d1Lights,
     act: t => drawD1Act(t, false),
@@ -78,7 +90,7 @@
     day: NIGHT, fog: [45, 130], kicks: [[WHO_SPLIT, .75]],
     keys: [
       K(D2, [75, G + 8.6, 86], [74, G + 7.8, 74], 54),
-      K(WHO_SPLIT - .3, [76, G + 8.8, 84], [74, G + 8.2, 74], 52),
+      K(WHO_SPLIT - .05, [76, G + 8.8, 84], [74, G + 8.2, 74], 52),
       K(WHO_SPLIT, [104, G + 7.5, 80], [104, G + 2.8, 67], 60),
       K(D3, [98, G + 6.0, 76], [97, G + 2.6, 66], 54),
     ],
@@ -88,13 +100,20 @@
     },
     act: t => {
       if (t < WHO_SPLIT) {
-        prop(74, G + 9.5, 73.2, 'bomb', { k: .062 });
+        prop(74, G + 9.5 + Math.sin(t * 10) * .12, 73.2, 'bomb', { k: .062 });
+        ringPulse(t, .95, 74, G + 9.5, 73.2, 3.8, [255, 86, 70], 16, .08);
+        riseSparks(t, 74, G + 7.5, 73.2, 2.8, 4.0, [255, 96, 80], 12, 1.3, .07);
         label(74, G + 11.4, 73.2, '出事只是时间问题…', 36, '#FF5A5A', t, D2, WHO_SPLIT);
       } else {
-        heige(104, G + 1, 70, { ...feel('determined', onTwos(t)), view: 'front' }, { tag: '黑哥拆解' });
-        label(99, G + 3.8, 67, '1 · 谁砍时间?', 34, '#FFD34E', t, WHO_SPLIT, D3);
-        label(104, G + 4.6, 67, '2 · 谁逼违建?', 34, '#FF7B73', t, WHO_SPLIT + .2, D3);
-        label(109, G + 3.8, 67, '3 · 谁签字背锅?', 34, '#72C9FE', t, WHO_SPLIT + .4, D3);
+        heige(104, G + 1, 70, { ...feel('determined', onTwos(t)), view: 'front', poseR: 'point' }, { tag: '黑哥拆解', dy: bob(t, 4, .03) });
+        orbitSparks(t, 104, G + 3.0, 70, 1.3, [255, 212, 59], 5, 2.8, .06);
+        riseSparks(t, 104, G + 1.5, 68, 9.0, 4.0, [255, 212, 59], 12, .9, .06);
+        prop(99, G + 2.6 + Math.sin(t * 4.5) * .16, 67, 'clock', { k: .028 });
+        prop(104, G + 3.3 + Math.sin(t * 4.5 + 1.5) * .16, 67, 'gun', { k: .028 });
+        prop(109, G + 2.6 + Math.sin(t * 4.5 + 3.0) * .16, 67, 'pot', { k: .028 });
+        label(99, G + 4.1, 67, '1 · 谁砍时间?', 34, '#FFD34E', t, WHO_SPLIT, D3);
+        label(104, G + 4.9, 67, '2 · 谁逼违建?', 34, '#FF7B73', t, WHO_SPLIT + .2, D3);
+        label(109, G + 4.1, 67, '3 · 谁签字背锅?', 34, '#72C9FE', t, WHO_SPLIT + .4, D3);
       }
     },
     ui: (c, t) => {
@@ -102,20 +121,30 @@
     },
   });
   flash(WHO_SPLIT, '#FFD43B', .4, .28);
-  sfx(D2 + .2, 'tick', -9); sfx(WHO_SPLIT, 'hit', -6);
+  sfx(WHO_SPLIT, 'hit', -6); sfx(D2 + .2, 'tick', -9);
 
   // ======================================================================================= D3 · 第一：谁把看图纸的时间砍没了？
   const CUT_TIME = AT('把活人站在旁边'), D4 = A('第二谁在逼着全员');
   shot(D3, D4, {
     day: DUSK, fog: [50, 150], kicks: [[CUT_TIME, .65]],
     keys: [
-      K(D3, [96, G + 5.5, 76], [98, G + 2.4, 67], 56),
-      K(CUT_TIME, [100, G + 4.8, 74], [98, G + 2.4, 67], 50),
+      K(D3, [96.2, G + 5.6, 76.4], [98, G + 2.4, 67], 56),
+      K(CUT_TIME, [100.4, G + 4.6, 73.6], [98.2, G + 2.4, 67], 50),
+      K(D4, [99.0, G + 5.0, 74.8], [98.5, G + 2.4, 67], 52),
     ],
     act: t => {
-      ppl(96, G + 1, 67, '老板', 'point', t, { tag: '减员增效', tagCol: '#FF6A5A' });
-      ppl(100, G + 1, 67, '开发', 'panic', t, { flip: true, shake: true, tag: '1 人扛 3 人活', tagCol: '#FFD34E' });
-      prop(100, G + 3.0, 67, 'doc'); prop(99.2, G + 3.4, 67, 'doc'); prop(100.8, G + 3.4, 67, 'doc');
+      const cut = t >= CUT_TIME;
+      ppl(96, G + 1, 67, '老板', 'point', t, { tag: '减员增效', tagCol: '#FF6A5A', dy: bob(t, 8, .05) });
+      ppl(100, G + 1, 67, '开发', 'panic', t, { flip: true, shake: true, dy: bob(t, 10, .04), tag: '1 人扛 3 人活', tagCol: '#FFD34E' });
+      // 老板不断扔出需求与死线时钟砸向开发
+      const p1 = (t * 1.4) % 1, p2 = (t * 1.4 + .5) % 1;
+      projArc(p1, 0, 1, 96.4, G + 2.2, 67, 100, G + 2.5, 67, 1.3, [255, 108, 92], .09);
+      projArc(p2, 0, 1, 96.4, G + 2.2, 67, 100, G + 2.8, 67, 1.6, [255, 212, 59], .09);
+      prop(100, G + 3.0 + Math.sin(t * 7) * .12, 67, 'doc');
+      prop(99.2, G + 3.4 + Math.cos(t * 7) * .12, 67, 'clock', { k: .022 });
+      prop(100.8, G + 3.4 - Math.sin(t * 7) * .12, 67, 'doc');
+      orbitSparks(t, 100, G + 3.4, 67, .8, [255, 92, 82], 4, 4.0, .06);
+      if (cut) ringPulse(t, 1.1, 100, G + 2.2, 67, 2.8, [255, 90, 90], 14, .07);
     },
     ui: (c, t) => {
       tagUI(c, '第一问 · 谁砍没了时间', 1, '#FFD34E');
@@ -131,14 +160,21 @@
   shot(D4, D5, {
     day: DUSK, fog: [50, 150], kicks: [[LOOP_T, .5]],
     keys: [
-      K(D4, [104, G + 5.5, 77], [104, G + 2.5, 67], 58),
-      K(LOOP_T, [105, G + 4.8, 74], [104, G + 2.5, 67], 52),
+      K(D4, [103.4, G + 5.6, 77.4], [104, G + 2.5, 67], 58),
+      K(LOOP_T, [105.6, G + 4.8, 74.0], [104.2, G + 2.5, 67], 52),
+      K(D5, [104.4, G + 5.2, 75.4], [104.2, G + 2.5, 67], 54),
     ],
     act: t => {
-      // 左开发较真核对 -> 老板给差评 [×]；右开发蒙眼狂喷 -> 老板给赞
-      ppl(99.5, G + 1, 67, '开发', 'sweat', t, { tag: '较真核对代码', tagCol: '#72C9FE' });
+      // 左开发较真核对 -> 乌云差评；右开发蒙眼狂喷水泥 -> 老板甩金币
+      ppl(99.5, G + 1, 67, '开发', 'sweat', t, { dy: bob(t, 5, .03), tag: '较真核对代码', tagCol: '#72C9FE' });
+      sweat(t, 99.5, G + 2.8, 67);
+      if (t >= LOOP_T) rainCloud(t, 99.5, G + 4.3, 67, .9);
       ppl(108.5, G + 1, 67, '开发', 'happy', t, { blind: true, tag: '闭眼狂糊上线', tagCol: '#FFD34E', dy: bob(t, 12, .08) });
-      ppl(104, G + 1, 65.5, '老板', 'happy', t, { tag: 'KPI 考核', tagCol: '#FF6A5A' });
+      prop(109.2, G + 1.8, 67, 'gun', { k: .024 });
+      sprayStream(t, 108.9, G + 2.0, 66.8, 111.5, G + 3.8, 66.0, [224, 198, 148]);
+      ppl(104, G + 1, 65.5, '老板', 'happy', t, { dy: bob(t, 8, .05), tag: 'KPI 考核', tagCol: '#FF6A5A' });
+      projArc((t * 1.3) % 1, 0, 1, 104.2, G + 2.2, 65.5, 108.5, G + 2.6, 67, 1.2, [255, 212, 59], .09);
+      riseSparks(t, 108.5, G + 1.8, 67, 2.0, 3.0, [255, 212, 59], 8, 1.1, .06);
       if (t >= LOOP_T) {
         label(99.5, G + 3.6, 67, '[×] 太慢 扣绩效!', 32, '#FF5A5A', t, LOOP_T, D5);
         label(108.5, G + 3.6, 67, '[赞] 战斗力强!', 34, '#FFD34E', t, LOOP_T + .4, D5);
@@ -162,7 +198,7 @@
     ],
     lights: t => {
       if (t < LOSS_SIGN) {
-        VX.light(142, G + 4, 83, WARM, 9, 1.2);
+        VX.light(142, G + 4, 83, WARM, 9, 1.2 + .15 * Math.sin(t * 6));
       } else {
         VX.light(72, G + 4.5, 57, WARM, 10, 1.25);
         VX.light(78, G + 4.5, 56, ICE, 9, 1.15);
@@ -172,14 +208,19 @@
       if (t < LOSS_SIGN) {
         // 省下的人头费飞进公司金库
         for (let i = 0; i < 6; i++) prop(141 + ((t * 2 + i * .4) % 3), G + 2.2 + Math.sin(t * 5 + i) * .3, 79, 'coin');
-        ppl(142, G + 1, 82, '老板', 'happy', t, { tag: '漂亮战报 +账本', tagCol: '#FFD34E' });
+        projArc((t * 1.5) % 1, 0, 1, 140.5, G + 2.4, 82, 144.5, G + 2.8, 80, 1.1, [255, 212, 59], .10);
+        riseSparks(t, 144.5, G + 1.8, 80, 3.6, 3.8, [255, 212, 59], 12, 1.1, .07);
+        ppl(142, G + 1, 82, '老板', 'happy', t, { dy: bob(t, 8, .06), tag: '漂亮战报 +账本', tagCol: '#FFD34E' });
       } else {
-        ppl(74, G + 1, 50.2, '老板', 'angry', t, { tag: '老板：只看提交记录', tagCol: '#FF5A5A' });
+        ppl(74, G + 1, 50.2, '老板', 'angry', t, { dy: bob(t, 9, .04), tag: '老板：只看提交记录', tagCol: '#FF5A5A' });
         ppl(71, G + 1, 56, '背锅侠', 'panic', t, { flip: true, shake: true, tag: '签字背锅', tagCol: '#72C9FE' });
         prop(71, G + 3.0, 56, 'pot', { k: .028 });
+        orbitSparks(t, 71, G + 3.4, 56, .62, [255, 212, 59], 4, 4.2, .06);
         if (t >= AI_DENY) {
-          clawd(76.2, G + 2, 53.0, { ...feel('confused', t) }, { k: .016, noShadow: true, tag: 'Claude (不认)' });
-          model('deepseek', 79.0, G + 2, 53.0, 'confused', t, { k: .020, noShadow: true, tag: 'DeepSeek (不认)' });
+          const hv = Math.sin(t * 5) * .15;
+          clawd(76.2, G + 2 + hv, 53.0, { ...feel('confused', t) }, { k: .016, noShadow: true, tag: 'Claude (不认)' });
+          model('deepseek', 79.0, G + 2 - hv, 53.0, 'confused', t, { k: .020, noShadow: true, tag: 'DeepSeek (不认)' });
+          projArc((t * 1.5) % 1, 0, 1, 76.2, G + 2.6, 53, 74, G + 2.6, 50.8, .6, [255, 92, 82], .08);
           label(77.6, G + 4.4, 53.0, '[×] 老板根本不认!', 36, '#FF5A5A', t, AI_DENY, D6);
         }
       }
@@ -201,18 +242,25 @@
       K(MISS_PAGE, [141, G + 4.6, 92], [138, G + 2.4, 86.5], 50),
     ],
     act: t => {
-      const boom = t >= MISS_PAGE;
-      ppl(127, G + 1, 88.2, '运营', boom ? 'shock' : 'happy', t, { tag: '做运营', tagCol: '#E890A8' });
-      ppl(135, G + 1, 88.2, '财务', boom ? 'panic' : 'neutral', t, { shake: boom, tag: '做财务', tagCol: '#9DB4FF' });
-      ppl(143, G + 1, 88.2, '策划', boom ? 'shock' : 'happy', t, { tag: '做策划', tagCol: '#FFD34E' });
-      model('doubao', 131, G + 1, 87.2, 'happy', t, { k: .020, tag: '豆包' });
-      model('deepseek', 139, G + 1, 87.2, 'happy', t, { k: .020, tag: 'DeepSeek' });
-      // 报价单直接飞出
-      prop(135, G + 2.6 + Math.sin(t * 6) * .2, 86.2, 'doc', { k: .03 });
+      const boom = t >= MISS_PAGE, hv = Math.sin(t * 4.5) * .15;
+      ppl(127, G + 1, 88.2, '运营', boom ? 'shock' : 'type', t, { tag: '做运营', tagCol: '#E890A8' });
+      ppl(135, G + 1, 88.2, '财务', boom ? 'panic' : 'type', t, { shake: boom, tag: '做财务', tagCol: '#9DB4FF' });
+      ppl(143, G + 1, 88.2, '策划', boom ? 'shock' : 'type', t, { tag: '做策划', tagCol: '#FFD34E' });
+      model('doubao', 131, G + 1 + hv, 87.2, 'happy', t, { k: .020, tag: '豆包' });
+      model('deepseek', 139, G + 1 - hv, 87.2, 'happy', t, { k: .020, tag: 'DeepSeek' });
+      // 报价单直接飞出 + 咖啡杯装点桌面
+      prop(128.4, G + 2.0, 84.2, 'coffee', { k: .018 });
+      prop(135, G + 2.6 + Math.sin(t * 6) * .22, 84.2, 'doc', { k: .03 });
+      if (!boom) {
+        projArc((t * 1.4) % 1, 0, 1, 131, G + 2.2, 87.2, 127, G + 2.2, 88.2, .7, [114, 201, 254], .08);
+        projArc((t * 1.4 + .5) % 1, 0, 1, 139, G + 2.2, 87.2, 143, G + 2.2, 88.2, .7, [255, 212, 59], .08);
+      }
       if (boom) {
         burst(t, MISS_PAGE, 135, G + 3.0, 86.5, [255, 86, 72], 22);
+        ringPulse(t, 1.1, 135, G + 2.5, 86.5, 3.6, [255, 86, 72], 16, .08);
         sweat(t, 135, G + 2.9, 88.2);
         prop(135, G + 2.9, 88.2, 'pot', { k: .028 });
+        orbitSparks(t, 135, G + 3.4, 88.2, .65, [255, 212, 59], 4, 4.2, .06);
       }
     },
     ui: (c, t) => {

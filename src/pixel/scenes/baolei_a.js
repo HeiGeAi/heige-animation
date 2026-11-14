@@ -2,7 +2,7 @@
 (() => {
   const N = window.BAOLEI;
   const { B, G, VX, D, K, shot, P, A, AT, PE, sfx, edit, fillEdit, flash,
-    heige, clawd, model, ppl, prop, bubble, label, burst, sweat, sprayStream, rainCloud,
+    heige, clawd, model, ppl, prop, bubble, label, burst, orbitSparks, riseSparks, ringPulse, projArc, sweat, sprayStream, rainCloud,
     seg01, sm, lerp, hh, clamp01, outlined, panel, tagUI, slam, toast, stamp, lossUI, ruleCard,
     HOST, WAR, SITE, AMBER, WARM, ALARM, ICE, DUSK, NIGHT, DAY } = N;
 
@@ -24,20 +24,24 @@
       K(S2, [HOST.x + 1.2, G + 3.6, HOST.z + 7.2], [HOST.x, G + 3.0, HOST.scrZ + 3], 54),
     ],
     lights: t => {
-      VX.light(HOST.x, G + 5, HOST.scrZ + 3, t >= BOOM1 ? ALARM : WARM, 10, 1.2);
+      VX.light(HOST.x, G + 5, HOST.scrZ + 3, t >= BOOM1 ? ALARM : WARM, 10, 1.2 + .18 * Math.sin(t * 7));
     },
     act: t => {
       const boomed = t >= BOOM1;
       heige(HOST.x - 2.4, G + 1, HOST.z - .8, {
         ...em(t, [[0, 'thinking'], [BOOM1 - .1, 'surprised'], [BOOM1 + .8, 'nervous']]),
         view: 'q', poseR: boomed ? 'point' : 'chin',
-      }, { tag: '黑哥' });
+      }, { tag: '黑哥', dy: bob(t, 4, .03) });
       // 屏幕中央前方站着放话的老码农 (HOST.scrZ=82 占 [82,83]，故站 z=83.5 不嵌进屏幕)
       ppl(HOST.x + .8, G + 2.1, HOST.scrZ + 1.5, '老码农', boomed ? 'angry' : 'talk', t, {
-        k: .032, flip: true, tag: '老码农视频', tagCol: '#FF6A5A', dy: boomed ? bob(t, 12, .05) : 0,
+        k: .032, flip: true, tag: '老码农视频', tagCol: '#FF6A5A', dy: bob(t, boomed ? 12 : 6, boomed ? .06 : .03),
       });
+      // 巨幕光粒子与声浪律动
+      riseSparks(t, HOST.x, G + 2.2, HOST.scrZ + 1.6, 7.5, 5.2, boomed ? [255, 108, 92] : [114, 201, 254], 12, 1.0, .06);
+      ringPulse(t, boomed ? .9 : 1.8, HOST.x + .8, G + 4.0, HOST.scrZ + 1.6, boomed ? 3.2 : 2.1, boomed ? [255, 92, 82] : [255, 212, 59], 14, .06);
       if (boomed) {
         burst(t, BOOM1, HOST.x, G + 6, HOST.scrZ + 1.6, [255, 92, 82], 24);
+        orbitSparks(t, HOST.x + .8, G + 5.6, HOST.scrZ + 1.6, 1.1, [255, 92, 82], 5, 3.6, .08);
         bubble(HOST.x + .8, G + 5.2, HOST.scrZ + 1.5, '未来很多公司都会暴雷！', t, BOOM1, S2 - .2);
       }
     },
@@ -60,19 +64,25 @@
       K(S3, [WAR.x + 5.5, G + 4.8, WAR.z + 7.0], [WAR.x + 6, G + 2.5, 47], 52),
     ],
     lights: t => {
-      VX.light(WAR.x, G + 5, 46, t < CRASH2 ? WARM : ALARM, 11, 1.3);
+      VX.light(WAR.x, G + 5, 46, t < CRASH2 ? WARM : ALARM, 11, t < CRASH2 ? 1.25 : 1.1 + .35 * Math.sin(t * 14));
     },
     act: t => {
       const crash = t >= CRASH2;
-      ppl(WAR.x, G + 1, 49, '老板', crash ? 'shock' : 'happy', t, { tag: '老板', tagCol: crash ? '#FF6A5A' : '#FFD34E', dy: crash ? 0 : bob(t, 9, .08) });
-      ppl(WAR.x - 4, G + 1, 51, '开发', crash ? 'panic' : 'neutral', t, { tag: false });
-      ppl(WAR.x + 4, G + 1, 51, '开发', crash ? 'panic' : 'neutral', t, { flip: true, tag: false });
+      ppl(WAR.x, G + 1, 49, '老板', crash ? 'shock' : 'happy', t, { tag: '老板', tagCol: crash ? '#FF6A5A' : '#FFD34E', dy: bob(t, crash ? 10 : 9, crash ? .04 : .08) });
+      const sw = crash ? Math.sin(t * 5.2) * .7 : 0;
+      ppl(WAR.x - 4 + sw, G + 1, 51, '开发', crash ? 'panic' : 'type', t, { walk: crash, shake: crash, flip: crash && Math.cos(t * 5.2) < 0, tag: false });
+      ppl(WAR.x + 4 - sw, G + 1, 51, '开发', crash ? 'panic' : 'type', t, { walk: crash, shake: crash, flip: !crash || Math.cos(t * 5.2) > 0, tag: false });
+      prop(WAR.x - 1.5, G + 2, 52.3, 'coffee', { k: .018 });
       if (!crash) {
         for (let i = 0; i < 6; i++) prop(WAR.x - 4 + i * 1.6, G + 4.2 - ((t * 1.6 + i * .3) % 2.2), 48, 'coin');
+        riseSparks(t, WAR.x, G + 2, 48, 8, 3.2, [255, 212, 59], 10, 1.0, .06);
         label(WAR.x, G + 5.4, 43.2, 'AI 降本增效 +50%', 44, '#FFD34E', t, S2, CRASH2);
       } else {
         burst(t, CRASH2, 83, G + 3.8, 47, [255, 86, 70], 26);
-        prop(83, G + 4.5, 47, 'bomb', { k: .028 });
+        riseSparks(t, 83.2, G + 3.4, 47, 1.8, 4.2, [255, 96, 70], 14, 1.5, .09);
+        ringPulse(t, 1.1, 83.2, G + 3.6, 47, 3.6, [255, 72, 64], 16, .08);
+        sweat(t, WAR.x - 4 + sw, G + 2.8, 51); sweat(t + .3, WAR.x + 4 - sw, G + 2.8, 51);
+        prop(83, G + 4.5 + Math.sin(t * 9) * .12, 47, 'bomb', { k: .028 });
         label(WAR.x, G + 5.4, 43.2, '[×] 线上严重资损！', 46, '#FF5A5A', t, CRASH2, S3);
       }
     },
@@ -95,15 +105,21 @@
       K(S4, [WAR.x - 2.5, G + 3.4, WAR.z + 8.0], [WAR.x - 5.5, G + 2.3, 55.5], 48),
     ],
     lights: t => {
-      VX.light(WAR.x, G + 5, 50, ALARM, 9, 1.15);
+      VX.light(WAR.x, G + 5, 50, ALARM, 9, 1.15 + .22 * Math.sin(t * 10));
       VX.light(WAR.x - 6, G + 4, 55, ICE, 6, .95);
     },
     act: t => {
-      const slapY = t >= SLAM_T && t < SLAM_T + .5 ? Math.abs(Math.sin((t - SLAM_T) * 14)) * .18 : 0;
+      const slamCycle = ((t - SLAM_T) % 2.1);
+      const slapY = t >= SLAM_T && slamCycle < .38 ? Math.abs(Math.sin(slamCycle * 16)) * .22 : 0;
       ppl(WAR.x, G + 1 + slapY, 50.2, '老板', t >= SLAM_T ? 'point' : 'angry', t, { tag: '领导', tagCol: '#FF6A5A' });
       const devMood = t >= SWEAT_T ? 'panic' : 'shock';
       ppl(WAR.x - 6, G + 1, 56, '背锅侠', devMood, t, { flip: true, shake: t >= SWEAT_T, tag: '写代码的哥们', tagCol: '#72C9FE' });
-      if (t >= SWEAT_T) sweat(t, WAR.x - 6, G + 2.9, 56);
+      prop(WAR.x - 2.5, G + 2.0, 52.3, 'coffee', { k: .020 });
+      if (t >= SLAM_T) ringPulse(t, 1.4, WAR.x, G + 2.2, 52.2, 2.8, [255, 92, 82], 14, .07);
+      if (t >= SWEAT_T) {
+        sweat(t, WAR.x - 6, G + 2.9, 56);
+        orbitSparks(t, WAR.x - 6, G + 3.25, 56, .58, [114, 201, 254], 4, 4.0, .06);
+      }
       bubble(WAR.x, G + 3.2, 50.2, '这逻辑怎么漏成这样?!', t, SLAM_T, SWEAT_T + .6);
       bubble(WAR.x - 6, G + 3.2, 56, '呃…那…当初怎么写的…', t, SWEAT_T + .4, S4);
     },
@@ -119,17 +135,21 @@
   shot(S4, S5, {
     day: NIGHT, fog: [36, 115], kicks: [[POT_AT, .8]],
     keys: [
-      K(S4, [WAR.x - 2.2, G + 3.8, WAR.z + 9.4], [WAR.x - 4.8, G + 2.5, 55.5], 50),
-      K(POT_AT, [WAR.x - 2.8, G + 3.7, WAR.z + 8.6], [WAR.x - 4.8, G + 2.5, 55.5], 49),
-      K(S5, [WAR.x - 3.2, G + 3.6, WAR.z + 8.2], [WAR.x - 4.8, G + 2.4, 55.5], 48),
+      K(S4, [WAR.x - 2.0, G + 3.9, WAR.z + 9.4], [WAR.x - 4.8, G + 2.5, 55.5], 50),
+      K(POT_AT, [WAR.x - 3.0, G + 3.6, WAR.z + 8.5], [WAR.x - 5.2, G + 2.5, 55.5], 49),
+      K(S5, [WAR.x - 4.2, G + 3.5, WAR.z + 7.8], [WAR.x - 5.6, G + 2.4, 55.8], 48),
     ],
     act: t => {
       const k = sm(seg01(t, POT_AT - .2, POT_AT + .08));
       const potY = lerp(G + 5.2, G + 2.85, k);
       const squ = t >= POT_AT && t < POT_AT + .25 ? -.18 * Math.exp(-(t - POT_AT) * 14) : 0;
-      ppl(WAR.x - 6, G + 1 + squ, 56, '背锅侠', t >= POT_AT ? 'dizzy' : 'panic', t, { flip: true, tag: false });
+      ppl(WAR.x - 6, G + 1 + squ, 56, '背锅侠', t >= POT_AT ? 'dizzy' : 'panic', t, { flip: true, shake: t >= POT_AT, tag: false });
       prop(WAR.x - 6, potY, 56, 'pot', { k: .032 });
-      if (t >= POT_AT) rainCloud(t, WAR.x - 6, G + 3.9, 56, 1);
+      if (t >= POT_AT) {
+        burst(t, POT_AT, WAR.x - 6, G + 2.9, 56, [255, 212, 59], 16);
+        orbitSparks(t, WAR.x - 6, G + 3.45, 56, .66, [255, 212, 59], 5, 4.4, .07);
+        rainCloud(t, WAR.x - 6, G + 4.1, 56, 1.15);
+      }
     },
     ui: (c, t) => {
       stamp(c, t, POT_AT, '绩效：D  待定', 1420, 300, '#FF5A5A', S5 - POT_AT);
@@ -148,23 +168,29 @@
       K(S6, [WAR.x + 5, G + 4.4, WAR.z + 9.5], [WAR.x + 2, G + 2.2, 55], 56),
     ],
     lights: t => {
-      VX.light(WAR.x, G + 4, 56, ICE, 11, 1.15);
+      VX.light(WAR.x, G + 4, 56, ICE, 11, 1.15 + .15 * Math.sin(t * 5));
     },
     act: t => {
       const xs = [68, 71, 74, 77, 80];
       const tags = ['Claude', 'DeepSeek', 'AI 生成', 'Claude', 'AI 堆砌'];
+      riseSparks(t, WAR.x, G + 1.4, 56, 14, 3.8, [130, 195, 255], 16, .85, .06);
       xs.forEach((dx, i) => {
         const isFirst = i === 0;
+        const shiv = Math.sin(t * 9 + i * 1.4) * .04;
         ppl(dx, G + 1, 56, isFirst ? '背锅侠' : '开发', 'sweat', t, {
-          flip: i < 2,
+          flip: i < 2, shake: t >= AI_REVEAL, dy: shiv,
           tag: t >= AI_REVEAL ? tags[i] : false,
           tagCol: i % 2 ? '#9DB4FF' : '#FFA882',
         });
         sweat(t + i * .23, dx, G + 2.8, 56);
       });
       if (t >= AI_REVEAL) {
-        clawd(71, G + 2, 55.2, { ...feel('happy', t), flip: true }, { k: .012, noShadow: true, tag: false });
-        model('deepseek', 77, G + 2, 55.2, 'happy', t, { k: .015, noShadow: true, tag: false });
+        const hover = Math.sin(t * 4.2) * .16;
+        clawd(71, G + 2.2 + hover, 55.2, { ...feel('happy', t), flip: true }, { k: .012, noShadow: true, tag: false });
+        model('deepseek', 77, G + 2.2 - hover, 55.2, 'happy', t, { k: .015, noShadow: true, tag: false });
+        const ph = (t * 1.2) % 1;
+        projArc(ph, 0, 1, 71, G + 2.6, 55.2, 68 + ((Math.floor(t * 1.2) % 3) * 3), G + 2.2, 56, .7, [255, 168, 130], .08);
+        projArc(ph, 0, 1, 77, G + 2.6, 55.2, 74 + ((Math.floor(t * 1.2) % 2) * 6), G + 2.2, 56, .7, [157, 180, 255], .08);
       }
     },
     ui: (c, t) => {
@@ -195,14 +221,20 @@
     ],
     act: t => {
       if (t < TURN6 + .3) {
-        ppl(WAR.x + 3, G + 1, 51, '老板', 'happy', t, { tag: '老板幻想：基建狂魔', tagCol: '#FFD34E' });
-        prop(WAR.x + 3, G + 2.9, 51, 'pie', { k: .028 });
+        ppl(WAR.x + 3, G + 1, 51, '老板', 'happy', t, { tag: '老板幻想：基建狂魔', tagCol: '#FFD34E', dy: bob(t, 8, .06) });
+        prop(WAR.x + 3, G + 2.9 + Math.sin(t * 7) * .12, 51, 'pie', { k: .028 });
+        riseSparks(t, WAR.x + 3, G + 1.5, 51, 2.4, 2.6, [255, 212, 59], 8, 1.0, .06);
       }
-      // 蒙眼盲人砌危楼
+      // 蒙眼盲人走动砌危楼 + 流沙飞尘
+      riseSparks(t, 110, G + 1.2, 44, 14, 3.2, [226, 192, 138], 14, .9, .07);
+      prop(116 + Math.sin(t * 2.4) * .35, G + 6.7, 41.2, 'doc', { k: .024 });
       for (let i = 0; i < 3; i++) {
-        const bx = [104, 110, 116][i], sway = Math.sin(t * 7 + i * 2) * .12;
-        ppl(bx + sway, G + 1, 47.5, '开发', 'panic', t, { blind: true, tag: i === 1 ? '蒙眼盖危楼' : false, tagCol: '#FF6A5A' });
-        if (t >= TURN6) sprayStream(t + i * .3, bx, G + 2.0, 47.5, bx, G + 5.5, 44, [224, 192, 138]);
+        const bx = [104, 110, 116][i], sway = Math.sin(t * 3.4 + i * 2) * .65;
+        ppl(bx + sway, G + 1, 47.5, '开发', 'panic', t, { walk: true, blind: true, flip: Math.cos(t * 3.4 + i * 2) < 0, tag: i === 1 ? '蒙眼盖危楼' : false, tagCol: '#FF6A5A' });
+        if (t >= TURN6) {
+          sprayStream(t + i * .3, bx + sway, G + 2.0, 47.5, bx, G + 5.5, 44, [224, 192, 138]);
+          projArc((t * 1.4 + i * .33) % 1, 0, 1, bx + sway, G + 2.2, 47.5, bx, G + 6.0, 44, 1.2, [255, 160, 96], .08);
+        }
       }
     },
     ui: (c, t) => {
@@ -217,13 +249,16 @@
   shot(S7, S8, {
     day: DUSK, fog: [50, 150],
     keys: [
-      K(S7, [HOST.x + 1.4, G + 2.8, HOST.z + 7.2], [HOST.x + 1.4, G + 2.1, HOST.z - .5], 56),
-      K(S8, [HOST.x + 1.8, G + 2.9, HOST.z + 6.8], [HOST.x + 1.6, G + 2.1, HOST.z - .5], 54),
+      K(S7, [HOST.x + 1.0, G + 2.8, HOST.z + 7.4], [HOST.x + 1.4, G + 2.1, HOST.z - .5], 56),
+      K(S8, [HOST.x + 2.4, G + 3.1, HOST.z + 6.5], [HOST.x + 1.6, G + 2.1, HOST.z - .5], 54),
     ],
-    lights: () => VX.light(HOST.x, G + 4, HOST.z + 2, WARM, 8, 1.1),
+    lights: () => VX.light(HOST.x, G + 4, HOST.z + 2, WARM, 8, 1.15),
     act: t => {
       heige(HOST.x - 1.2, G + 1, HOST.z - .5, { ...feel('proud', onTwos(t)), view: 'q', poseR: 'point' }, { tag: '黑哥' });
-      clawd(HOST.x + .8, G + 1, HOST.z - .2, { ...feel('happy', t), flip: true });
+      clawd(HOST.x + .8, G + 1, HOST.z - .2, { ...feel('happy', t), flip: true }, { dy: Math.abs(Math.sin(t * 4.5)) * .16 });
+      prop(HOST.x - .2, G + 2.6 + Math.sin(t * 4) * .12, HOST.z - .3, 'shield', { k: .024 });
+      riseSparks(t, HOST.x - .2, G + 1.5, HOST.z - .2, 3.6, 3.2, [255, 212, 59], 12, 1.0, .06);
+      orbitSparks(t, HOST.x - .2, G + 2.7, HOST.z - .3, .9, [255, 212, 59], 4, 2.8, .06);
     },
     ui: (c, t) => {
       ruleCard(c, t, S7, S8, '先看', '文末三条保命铁律', [
