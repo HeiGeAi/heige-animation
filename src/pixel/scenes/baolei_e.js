@@ -63,7 +63,7 @@
   });
   sfx(E2 + .1, 'levelup', -9); sfx(R1_1, 'place', -9); sfx(R1_2, 'place', -9); sfx(R1_3, 'anvil', -8);
 
-  // ======================================================================================= E3 · 铁律 2：关掉 AI，脱稿讲顺一分钟（定时炸弹对比）
+  // ======================================================================================= E3 · 铁律 2：关掉 AI，脱稿讲清楚（定时炸弹对比）
   const MINS = AT('AI三分钟吐出的东西'), BOMB2 = AT('定时炸弹'), E4 = A('第三条要命的底线');
   shot(E3, E4, {
     day: DUSK, fog: [48, 150], kicks: [[BOMB2, .6]],
@@ -74,16 +74,16 @@
     ],
     act: t => {
       const bmb = t >= BOMB2;
-      heige(102.2, G + 1, 68.5, { ...feel(bmb ? 'nervous' : 'idea', onTwos(t)), view: 'front', poseR: 'wave' }, { tag: '脱稿 1 分钟自检' });
-      ppl(106.0, G + 1, 68.2, '开发', bmb ? 'panic' : 'neutral', t, { flip: true, tag: bmb ? '讲不顺 = 危险!' : '关屏幕讲一遍', tagCol: bmb ? '#FF5A5A' : '#72C9FE' });
+      heige(102.2, G + 1, 68.5, { ...feel(bmb ? 'nervous' : 'idea', onTwos(t)), view: 'front', poseR: 'wave' }, { tag: '脱稿讲清楚自检' });
+      ppl(106.0, G + 1, 68.2, '开发', bmb ? 'panic' : 'neutral', t, { flip: true, tag: bmb ? '讲不清 = 危险!' : '关屏幕讲清楚', tagCol: bmb ? '#FF5A5A' : '#72C9FE' });
       if (bmb) prop(106.0, G + 3.2, 68.2, 'bomb', { k: .038 });
     },
     ui: (c, t) => {
       tagUI(c, '保命铁律 2 / 3', 1, '#FFD34E');
-      ruleCard(c, t, E3, E4, 2, '点提交前关掉AI · 脱稿一分钟', [
+      ruleCard(c, t, E3, E4, 2, '点提交前关掉AI · 脱稿讲清楚', [
         [E3 + .2, '[×] 屏幕已熄灭：脱离 AI 独立过逻辑'],
         [MINS, '[记] 花 20 分钟理明白 -> 保住年底饭碗'],
-        [BOMB2, '[!] 讲不顺？这就是写你名字的定时炸弹'],
+        [BOMB2, '[!] 讲不清楚？这就是写你名字的定时炸弹'],
       ], 1100, 120, 760);
     },
   });
