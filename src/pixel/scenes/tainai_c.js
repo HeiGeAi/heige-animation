@@ -90,10 +90,13 @@
       tagUI(c, '学术实锤 · Anthropic 实测 5 款主流 AI 助手 (ICLR 2024)', 1, '#FFD43B');
       worldScreen(c, t, S17 + .2, S18 - .1, {
         key: 'anthropic',
-        x: 520, y: 400, w: 820,
+        x: 495, y: 462, w: 800,
         badge: 'ICLR 2024',
         title: 'Anthropic 论文：人类偏好打分训出 AI「迎合讨好毛病」',
-        boxes: [[0.02, 0.44, 0.47, 0.50, T_RLHF]],
+        boxes: [
+          [0.01, 0.21, 0.96, 0.07, S17 + .35],
+          [0.01, 0.62, 0.98, 0.30, T_RLHF],
+        ],
       });
       if (t >= T_RLHF) stamp(c, t, T_RLHF, '👍 顺着夸 = 高分过关', 1480, 210, '#FFD43B', S18 - T_RLHF);
     },
@@ -123,11 +126,14 @@
       if (t < T_FAIL - .1) {
         worldScreen(c, t, S18 + .15, T_FAIL - .1, {
           key: 'hbr',
-          x: 560, y: 410, w: 880,
+          x: 510, y: 440, w: 840,
           beamFrom: [144.6, G + 2.4, 48.6],
           badge: '哈佛商业评论',
           title: 'Gary Klein · 先假定项目已经彻底失败，再倒推死因',
-          boxes: [[0.03, 0.46, 0.94, 0.46, S18 + .4]],
+          boxes: [
+            [0.02, 0.39, 0.45, 0.19, S18 + .25],
+            [0.02, 0.82, 0.58, 0.16, S18 + .55],
+          ],
         });
       } else {
         holoBoard(c, 960, 275, 920, 270,

@@ -590,11 +590,18 @@
     c.translate(cx, cy); c.scale(popK, popK); c.translate(-cx, -cy);
     const x0 = cx - w / 2, y0 = cy - h / 2;
     panel(c, x0, y0, w, h, o.border || '#FFD43B', 'rgba(14,11,24,.95)');
-    // 顶部电影取证铭牌栏
+    // 顶部电影取证铭牌栏（徽章自适应宽度 + 标题限宽防溢出）
+    const badge = o.badge || '真实来源';
+    c.font = `900 21px ${FONT}`;
+    const bw = Math.max(124, Math.ceil(c.measureText(badge).width + 26));
     c.fillStyle = o.border || '#FFD43B';
-    c.beginPath(); c.roundRect(x0 + 16, y0 + 14, 152, 38, 8); c.fill();
-    outlined(c, o.badge || '真实来源', x0 + 92, y0 + 33, 22, '#140A10', { lw: 0, shadow: false, w: 900 });
-    outlined(c, o.title || '', x0 + 184, y0 + 33, 26, '#FAF6EE', { align: 'left', lw: 0, shadow: false });
+    c.beginPath(); c.roundRect(x0 + 16, y0 + 14, bw, 38, 8); c.fill();
+    outlined(c, badge, x0 + 16 + bw / 2, y0 + 33, 21, '#140A10', { lw: 0, shadow: false, w: 900 });
+    const titleX = x0 + 16 + bw + 14, maxTW = Math.max(160, w - (bw + 46));
+    c.font = `800 24px ${FONT}`;
+    const tW = c.measureText(o.title || '').width;
+    const tSz = tW > maxTW ? Math.max(18, Math.floor(24 * maxTW / tW)) : 24;
+    outlined(c, o.title || '', titleX, y0 + 33, tSz, '#FAF6EE', { align: 'left', lw: 0, shadow: false });
     // 真实截图/文献画面
     c.drawImage(im, x0 + 16, y0 + 64, w - 32, ih);
     c.strokeStyle = '#2E2844'; c.lineWidth = 2; c.strokeRect(x0 + 16, y0 + 64, w - 32, ih);
