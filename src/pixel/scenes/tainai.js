@@ -213,38 +213,45 @@
       [160, 34, true], [160, 60, false], [160, 98, true],
     ].forEach(t => putTree(...t));
 
-    // ========================================================================= 片场1 GRANDMA：太奶暖炕小院 × 京沪双塔 × 露天电影巨幕
+    // ========================================================================= 片场1 GRANDMA：太奶暖炕小院 × 京沪双塔 × 露天电影巨幕 × 官话出口拱门
     VX.fill(56, G, 34, 78, G, 54, B.plankSoft);
     // 后方露天 IMAX 巨幕金框 (x=60..74, y=G+2..G+10, z=36)
     VX.fill(60, G + 1, 36, 74, G + 11, 36, B.obsidian);
     VX.fill(61, G + 2, 36, 73, G + 10, 36, B.tnGoldTrim);
     VX.fill(62, G + 3, 36, 72, G + 9, 36, B.box);
-    // 后置太奶红砖暖炕（高度1格且后置在 z=41..43，绝不遮挡前方 z=45..47 演员全身！）
+    // 后置太奶红砖暖炕（高度1格且后置在 z=41..43，绝不遮挡前方 z=45..47 演员全身）
     VX.fill(57, G + 1, 41, 61, G + 1, 43, B.tnKang);
     VX.fill(57, G + 1, 40, 61, G + 5, 40, B.plankSoft);
     VX.fill(56, G + 6, 39, 62, G + 6, 42, B.tnRoof);
-    // 北京红金阁塔 (x=63, z=40, 高3格) vs 上海蓝钻明珠塔 (x=72, z=40, 高4格)
-    VX.fill(62, G + 1, 39, 64, G + 3, 41, B.wred);
-    VX.fill(62, G + 4, 39, 64, G + 4, 41, B.tnGoldTrim);
-    VX.set(63, G + 5, 40, B.lamp);
-    VX.fill(71, G + 1, 39, 73, G + 4, 41, B.tnGlassElev);
-    VX.set(72, G + 5, 40, B.amethyst);
-    VX.set(72, G + 6, 40, B.portal);
+    // 雄伟高耸北京红金钟楼双层塔 (x=60..63, z=39..41, 顶高 G+9 + 金顶G+10)
+    VX.fill(60, G + 1, 39, 63, G + 5, 41, B.wred);
+    VX.fill(59, G + 6, 38, 64, G + 6, 42, B.tnGoldTrim);
+    VX.fill(61, G + 7, 39, 62, G + 8, 41, B.wred);
+    VX.fill(61, G + 9, 40, 62, G + 9, 40, B.tnGoldTrim);
+    VX.set(61, G + 10, 40, B.lamp);
+    // 雄伟高耸上海冰蓝东方明珠晶塔 (x=71..74, z=39..41, 顶高 G+10 + 紫晶G+11)
+    VX.fill(71, G + 1, 39, 74, G + 6, 41, B.tnGlassElev);
+    VX.fill(71, G + 7, 39, 74, G + 8, 41, B.wblue);
+    VX.fill(72, G + 9, 40, 73, G + 10, 40, B.amethyst);
+    VX.set(72, G + 11, 40, B.lamp);
+    // 左侧「官话套话出口」拱门 (x=57..59, z=44)：S09 时黄金砖轰然封死！
+    VX.fill(56, G + 1, 44, 56, G + 5, 44, B.obsidian);
+    VX.fill(60, G + 1, 44, 60, G + 5, 44, B.obsidian);
+    VX.fill(56, G + 5, 44, 60, G + 5, 44, B.redlamp);
     putLamp(56, G + 4, 49, WARM, 9, 1.2);
     putLamp(76, G + 4, 49, AMBER, 9, 1.15);
 
-    // ========================================================================= 片场2 BLVD：黑哥大电影主城金门巨殿 (HEIGE STUDIO ARCH)
-    VX.fill(92, G, 80, 116, G, 102, B.iron);
+    // ========================================================================= 片场2 BLVD：黑哥大电影主城金门巨殿 (HEIGE STUDIO ARCH，丝绒暗底防噪声)
+    VX.fill(92, G, 80, 116, G, 102, B.tnPlaza);
     VX.fill(94, G, 82, 114, G, 100, B.wred); // 星光红毯大道
-    // 宏伟双塔凯旋门
     VX.fill(94, G + 1, 82, 97, G + 13, 84, B.obsidian);
     VX.fill(111, G + 1, 82, 114, G + 13, 84, B.obsidian);
     VX.fill(95, G + 2, 82, 96, G + 12, 84, B.tnGoldTrim);
     VX.fill(112, G + 2, 82, 113, G + 12, 84, B.tnGoldTrim);
     VX.fill(94, G + 12, 82, 114, G + 14, 84, B.obsidian);
     VX.fill(96, G + 13, 82, 112, G + 13, 82, B.tnGoldTrim);
-    VX.fill(98, G + 3, 83, 110, G + 10, 83, B.portal); // 跨次元电影紫金星门
-    // 四个段位发光宝座台后置在 z=86..87（绝不遮挡前方 z=90..92 舞台中央的黑哥与伙伴！）
+    VX.fill(98, G + 3, 83, 110, G + 11, 83, B.deep); // 冷静深靛电影巨幕墙（不晃眼无摩尔纹）
+    VX.fill(99, G + 10, 83, 109, G + 11, 83, B.tnSkyWarm);
     for (const [i, tx] of [[0, 96], [1, 101], [2, 107], [3, 112]]) {
       VX.fill(tx - 1, G + 1, 86, tx + 1, G + 1, 87, i === 3 ? B.wred : B.tnGoldTrim);
     }
@@ -253,15 +260,15 @@
 
     // ========================================================================= 片场3 TOWER：摩天写字楼公文区 × 16层现代全景剖面观光电梯井
     VX.fill(92, G, 36, 119, G, 56, B.tnPlaza);
-    // 左：写字楼背景幕墙与后置办公桌 (z=42，不挡 z=46 演员)
-    VX.fill(94, G + 1, 39, 103, G + 8, 39, B.deep);
-    VX.fill(95, G + 2, 39, 102, G + 6, 39, B.tnGlassElev);
+    VX.fill(94, G + 1, 39, 104, G + 9, 39, B.deep);
+    VX.fill(95, G + 2, 39, 103, G + 7, 39, B.tnGlassElev);
     VX.fill(96, G + 1, 42, 101, G + 1, 42, B.plankSoft);
     VX.set(98, G + 2, 42, B.monitor);
-    // 右：16层现代全景剖面电梯井（玻璃背墙 z=41 + 两侧发光导轨 x=108,113，正面敞开拍清轿厢人物！）
+    // 右：16层现代全景剖面电梯井（深色 obsidian + 金边导轨，绝不使用铁栏杆！）
     VX.fill(108, G + 1, 40, 113, G + 17, 40, B.obsidian);
     VX.fill(109, G + 2, 41, 112, G + 16, 41, B.tnGlassElev);
-    for (const ex of [108, 113]) VX.fill(ex, G + 1, 40, ex, G + 17, 43, B.iron);
+    for (const ex of [108, 113]) VX.fill(ex, G + 1, 40, ex, G + 17, 43, B.obsidian);
+    for (let yy = G + 2; yy <= G + 16; yy += 2) { VX.set(108, yy, 43, B.tnGoldTrim); VX.set(113, yy, 43, B.tnGoldTrim); }
     VX.fill(108, G + 17, 40, 113, G + 18, 43, B.tnGoldTrim);
     // 隔壁豆包蓝光传送门舱 (x=115..117, z=42)
     VX.fill(115, G + 1, 41, 117, G + 6, 42, B.wblue);
@@ -269,11 +276,13 @@
     putLamp(94, G + 4, 51, ICE, 8, 1.05);
     putLamp(115, G + 4, 51, WARM, 9, 1.15);
 
-    // ========================================================================= 片场4 CAFE：霓虹街头三万块咖啡餐车 × 赛博验尸天文台
+    // ========================================================================= 片场4 CAFE：写字楼商圈摩天楼下的三万块咖啡餐车 × 赛博天文台
     VX.fill(128, G, 34, 158, G, 58, B.plankSoft);
-    VX.fill(134, G + 1, 36, 150, G + 10, 36, B.obsidian);
-    VX.fill(135, G + 2, 36, 149, G + 9, 36, B.bannerBlue);
-    VX.fill(134, G + 10, 36, 150, G + 10, 36, B.tnGoldTrim);
+    putTower(128, 34, 6, 6, 20, 'warm'); // 写字楼左塔
+    putTower(151, 34, 6, 6, 22, 'blue'); // 写字楼右塔
+    VX.fill(135, G + 1, 36, 149, G + 10, 36, B.obsidian);
+    VX.fill(136, G + 2, 36, 148, G + 9, 36, B.bannerBlue);
+    VX.fill(135, G + 10, 36, 149, G + 10, 36, B.tnGoldTrim);
     // 现代街头霓虹咖啡餐车（深色黑板菜单吧台防过曝 + 霓虹粉车顶 + 黄金咖啡杯雕塑）
     VX.set(138, G + 1, 46, B.obsidian); VX.set(145, G + 1, 46, B.obsidian);
     VX.fill(137, G + 2, 43, 146, G + 5, 46, B.terra);
@@ -281,7 +290,7 @@
     VX.set(140, G + 3, 46, B.lamp); VX.set(143, G + 3, 46, B.monitor);
     VX.fill(137, G + 6, 43, 146, G + 6, 47, B.tnNeonPink);
     VX.fill(140, G + 7, 44, 143, G + 8, 45, B.tnGoldTrim);
-    for (const px of [136, 141, 146]) VX.fill(px - 1, G, 49, px + 1, G, 51, B.tnWarn);
+    for (const px of [138, 141, 144]) VX.fill(px - 1, G, 48, px + 1, G, 50, B.tnWarn);
     putLamp(131, G + 4, 53, ROSE, 9, 1.05);
     putLamp(153, G + 4, 53, WARM, 9, 1.05);
 
@@ -298,20 +307,19 @@
     putLamp(56, G + 4, 88, ICE, 9, 1.1);
     putLamp(85, G + 4, 88, AMBER, 9, 1.2);
 
-    // ========================================================================= 片场6 COURT：跑路健身房街角 × 威严最高审判大厅
+    // ========================================================================= 片场6 COURT：跑路健身房街角（无铁栏杆）× 威严最高审判大厅
     VX.fill(122, G + 1, 83, 129, G + 6, 86, B.brickSoft);
-    VX.fill(124, G + 1, 86, 127, G + 4, 86, B.iron);
+    VX.fill(124, G + 1, 86, 127, G + 4, 86, B.obsidian); // 深色卷帘门
+    VX.set(125, G + 2, 86, B.tnWarn); VX.set(126, G + 2, 86, B.tnWarn); // 封条 X
     VX.fill(123, G + 5, 86, 128, G + 5, 86, B.tnWarn);
     VX.fill(132, G, 72, 154, G, 94, B.wred);
     VX.fill(132, G + 1, 72, 154, G + 12, 73, B.tnMarble);
     for (const cx of [133, 137, 149, 153]) VX.fill(cx, G + 1, 74, cx, G + 11, 74, B.tnMarble);
     VX.fill(132, G + 12, 72, 154, G + 13, 76, B.tnRoof);
     VX.fill(135, G + 11, 74, 151, G + 11, 74, B.tnGoldTrim);
-    // 审判长高台 (y=G+1..G+2, z=75..77)，高度适中让法官与台前律师同框全身入画！
     VX.fill(139, G + 1, 75, 147, G + 2, 77, B.plankSoft);
     VX.fill(141, G + 2, 77, 145, G + 2, 77, B.tnGoldTrim);
     VX.set(143, G + 9, 73, B.tnGoldTrim);
-    // 控辩席分置左右两侧 (x=135..137, x=149..151)
     VX.fill(135, G + 1, 84, 137, G + 1, 86, B.plankSoft);
     VX.fill(149, G + 1, 84, 151, G + 1, 86, B.plankSoft);
     putLamp(134, G + 4, 89, WARM, 10, 1.15);
@@ -429,6 +437,11 @@
   PROPS.scales = mkProp(s => { s.rect(-2, -28, 4, 24, '#FFD43B').rect(-14, -25, 28, 3, '#FFD43B').ell(-12, -14, 6, 4, '#E8A838').ell(12, -14, 6, 4, '#E8A838').rect(-8, -4, 16, 3, '#B87A1E'); }, 48, 40, 24, 34);
   PROPS.shield = mkProp(s => { s.rect(-10, -22, 20, 15, '#2A2840').rect(-8, -20, 16, 12, '#FFD43B').rect(-6, -7, 12, 5, '#E8A228'); }, 36, 36, 18, 30);
   PROPS.bomb   = mkProp(s => { s.ell(0, -11, 10, 10, '#221E2E').rect(-2, -24, 4, 5, '#D89C2A').rect(1, -28, 4, 4, '#FF5A5A'); }, 34, 36, 17, 31);
+  PROPS.dumbbell = mkProp(s => { s.rect(-14, -18, 7, 14, '#2A283C').rect(7, -18, 7, 14, '#2A283C').rect(-7, -13, 14, 4, '#D8A84E').rect(-12, -16, 3, 10, '#6E728E').rect(9, -16, 3, 10, '#6E728E'); }, 36, 30, 18, 24);
+  PROPS.thumbUp  = mkProp(s => { s.rect(-9, -16, 18, 13, '#FFD43B').rect(-5, -24, 6, 8, '#FFD43B').rect(-15, -16, 6, 13, '#4A82E8'); }, 40, 34, 20, 28);
+  PROPS.thumbDn  = mkProp(s => { s.rect(-9, -20, 18, 13, '#FF5A5A').rect(-1, -7, 6, 8, '#FF5A5A').rect(-15, -20, 6, 13, '#3A3250'); }, 40, 34, 20, 28);
+  PROPS.mask     = mkProp(s => { s.ell(0, -14, 11, 11, '#FAF0E4').rect(-7, -18, 4, 3, '#1E182A').rect(3, -18, 4, 3, '#1E182A').rect(-4, -10, 8, 2, '#D84A44'); }, 36, 36, 18, 30);
+  PROPS.magnify  = mkProp(s => { s.ell(-2, -18, 10, 10, '#D89C2A').ell(-2, -18, 7, 7, '#72C9FE').line(5, -11, 14, -2, '#6E3A20'); }, 40, 36, 20, 30);
   const prop = (x, y, z, name, ex = {}) => { if (PROPS[name]) VX.sprite(PROPS[name], x, y, z, { k: ex.k ?? .025, flip: !!ex.flip }); };
 
   // ======================================================================================= 3D 粒子与能量场特效
@@ -721,6 +734,21 @@
     c.restore();
   }
 
+  // 3D 锚定跨次元全息剧情看板（密密麻麻合同条款、周报《结合上述情况》、对错答案翻牌、事前验尸倒推图、退费时间线对照）
+  function holoBoard(c, x, y, w, h, title, badge, border = '#FFD43B', rows = []) {
+    c.save();
+    panel(c, x - w / 2, y - h / 2, w, h, border, 'rgba(14,11,26,.94)');
+    c.fillStyle = border; c.beginPath(); c.roundRect(x - w / 2 + 18, y - h / 2 + 14, 152, 36, 8); c.fill();
+    outlined(c, badge, x - w / 2 + 94, y - h / 2 + 32, 22, '#140A10', { lw: 0, shadow: false, w: 900 });
+    outlined(c, title, x - w / 2 + 186, y - h / 2 + 32, 26, border, { align: 'left', lw: 0, shadow: false, w: 900 });
+    rows.forEach(([txt, col, bg], i) => {
+      const ry = y - h / 2 + 72 + i * 54;
+      if (bg) { c.fillStyle = bg; c.beginPath(); c.roundRect(x - w / 2 + 20, ry - 20, w - 40, 44, 8); c.fill(); }
+      outlined(c, txt, x - w / 2 + 34, ry + 2, 25, col || '#FAF6EE', { align: 'left', lw: 0, shadow: false });
+    });
+    c.restore();
+  }
+
   // 电影感暖辉光与暗角
   let BR = null;
   function post(c) {
@@ -837,7 +865,7 @@
     heige, clawd, model, ppl, prop, bubble, label,
     burst, riseSparks, orbitSparks, ringPulse, projArc, quantumBeam, firework,
     seg01, sm, lerp, hh, clamp01, fadeIO, outlined, panel, tagUI, slam, stamp,
-    worldScreen, promptCard, yellowHammer, worldSign, skyBeams,
+    worldScreen, promptCard, yellowHammer, worldSign, skyBeams, holoBoard,
     GRANDMA, BLVD, TOWER, CAFE, ARENA, COURT,
     AMBER, WARM, ALARM, ICE, ROSE, DUSK, NIGHT, DAY, GOLDEN, FONT,
   };
