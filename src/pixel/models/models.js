@@ -5,9 +5,22 @@
 //   modelPx('dsChibi', x, groundY, { ...feel('happy', t), emote: '!', emoteK: 1 })
 const MODEL_CAST = {                                                  // name -> sprite in SPRITES
   deepseek: 'dsChibi',
-  // the rest of the locked roster (models/roster.js)
-  gpt: 'rsGpt', gemini: 'rsGemini', grok: 'rsGrok', muse: 'rsMuse', doubao: 'rsDoubao', qianwen: 'rsQianwen',
-  yuanbao: 'rsYuanbao', kimi: 'rsKimi', zhipu: 'rsZhipu', mimo: 'rsMimo', minimax: 'rsMinimax', wenxin: 'rsWenxin',
+  // the rest of the 17-model Q-version locked roster (models/roster.js; Claude stays Clawd)
+  gpt: 'rsGpt', chatgpt: 'rsGpt',
+  gemini: 'rsGemini',
+  grok: 'rsGrok',
+  llama: 'rsLlama',
+  mistral: 'rsMistral',
+  newbing: 'rsNewbing', bing: 'rsNewbing',
+  updream: 'rsUpdream',
+  qianwen: 'rsQianwen', qwen: 'rsQianwen',
+  doubao: 'rsDoubao', seed: 'rsDoubao',
+  kimi: 'rsKimi',
+  hunyuan: 'rsHunyuan',
+  zhipu: 'rsZhipu', glm: 'rsZhipu',
+  minimax: 'rsMinimax',
+  mimo: 'rsMimo',
+  wenxin: 'rsWenxin', ernie: 'rsWenxin',
   // 「黑哥武馆」 V066 (models/wuxia.js)
   xiaoheizi: 'wxXiaoheizi', heige_guanzhu: 'wxHeigeGuanzhu', dario: 'wxDario', ds_menren: 'wxDsMenren', dafeiyu: 'wxDsMenren', liangsheng: 'wxLiangsheng',
   laohuang: 'wxLaohuang', sam: 'wxSam', tudi: 'wxTudi', laoma: 'wxLaoma',
