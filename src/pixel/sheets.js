@@ -65,4 +65,19 @@
     };
     Object.assign(LOOPS.pxHeigeViews, { len: 4, res: [6 * cw, 2 * ch], px: 4, overlay: labels(cells) });
   }
+
+  // DeepSeek acting all 31 emotions on the Q-version pixel rig (matches pxHeigeEmotions / upstream emotions.webp)
+  {
+    const names = Object.keys(EMO), cols = 8, cw = 84, ch = 122, gy = 108, cells = [];
+    names.forEach((n, i) => cells.push([ZH[n] || n, cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy + 2, n]));
+    LOOPS.pxModelEmotions = t => {
+      prect(0, 0, PW, PH, BG);
+      for (let r = 0; r < 4; r++) { prect(0, ch * r + gy, PW, 1, FLOOR); prect(0, ch * r + gy + 1, PW, 1, FLOOR2); }
+      const tt = onTwos(t);
+      names.forEach((n, i) => {
+        modelPx('deepseek', cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy, feel(n, tt, { seed: i }));
+      });
+    };
+    Object.assign(LOOPS.pxModelEmotions, { len: 4, res: [cols * cw, 4 * ch], px: 3, overlay: labels(cells) });
+  }
 })();

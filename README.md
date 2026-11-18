@@ -4,14 +4,19 @@
 
 ![黑哥武馆角色设定表](docs/wuxia/cast-sheet.png)
 
-问问黑哥的 AI 大模型全家福也都有 Q 版像素造型（17 位齐聚，Claude 保留 Clawd 出演，另有 DeepSeek、GPT、Gemini、Grok、Llama、Mistral、NewBing、Updream、豆包、千问、Kimi、混元、智谱、MiniMax、MiMo、文心），见 [src/pixel/models/roster.js](src/pixel/models/roster.js)、[src/pixel/models/deepseek.js](src/pixel/models/deepseek.js) 和 [docs/roster/](docs/roster/)：
+问问黑哥的 AI 大模型全家福也都有 Q 版像素造型（17 位齐聚，Claude 保留 Clawd 出演，另有 DeepSeek、GPT、Gemini、Grok、Llama、Mistral、NewBing、Updream、豆包、千问、Kimi、混元、智谱、MiniMax、MiMo、文心），全部接入统一像素绑定骨骼与表情演技引擎（`modelPx()`：8 相步态、挤压拉伸与滞空惯性、视线追踪、眨眼、染色、31 种全表情与签名道具联动），见 [src/pixel/models/roster.js](src/pixel/models/roster.js)、[src/pixel/models/deepseek.js](src/pixel/models/deepseek.js)、[src/pixel/models/models.js](src/pixel/models/models.js) 与 [docs/roster/](docs/roster/)：
 
-![AI 大模型全家福](docs/roster/05-family.jpg)
+![AI 大模型全家福，动态展示](docs/roster/family.webp)
+
+更多像素表演展示：[DeepSeek 全 31 种表情动态表（emotions.webp）](docs/roster/emotions.webp) · [黑哥 × DeepSeek × Clawd 同台演戏（lineup.webp）](docs/roster/lineup.webp) · 分组静态大图（[01 海外四位](docs/roster/01-overseas.jpg) / [02 平台四位](docs/roster/02-platform.jpg) / [03 国产五位](docs/roster/03-cn-a.jpg) / [04 国产四位](docs/roster/04-cn-b.jpg) / [05 全家福](docs/roster/05-family.jpg)）。
 
 另一批角色是视频「黑哥武馆」的九个武侠小人（小黑子、黑哥馆主、达里奥、大肥鱼、梁圣、房东老黄、掌柜山姆奥特曼、徒弟、摊主老马），见 [src/pixel/models/wuxia.js](src/pixel/models/wuxia.js) 和 [docs/wuxia/](docs/wuxia/)。
 
 ```bash
 npm install
+node render.mjs --page=pixel.html --loop=pxRoster --stills=1.8,4.8,7.8,10.8,14.4 --out=out/pixel/roster
+node render.mjs --page=pixel.html --loop=pxModelLineup --clip --fps=24 --out=out/pixel/lineup.mp4
+node render.mjs --page=pixel.html --loop=pxModelEmotions --stills=0.5 --out=out/pixel/model_emotions
 node render.mjs --page=pixel.html --loop=pxWuxiaCast --stills=1.4,3.4,5.4,7.4 --out=out/pixel/wuxia
 ```
 
