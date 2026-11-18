@@ -4,13 +4,17 @@
 
 ![黑哥武馆角色设定表](docs/wuxia/cast-sheet.png)
 
-问问黑哥的日常视频像素形象与 AI 大模型全家福（共 18 位同框：黑哥居中领衔，Claude 保留 Clawd 出演，另有 DeepSeek、GPT、Gemini、Grok、Llama、Mistral、NewBing、Updream、豆包、千问、Kimi、混元、智谱、MiniMax、MiMo、文心），全部接入统一像素绑定骨骼与表情演技引擎（`modelPx()` & `heigePx()`：8 相步态、挤压拉伸与滞空惯性、视线追踪、眨眼、染色、31 种全表情与签名道具联动），见 [src/pixel/heige.js](src/pixel/heige.js)、[src/pixel/models/roster.js](src/pixel/models/roster.js)、[src/pixel/models/deepseek.js](src/pixel/models/deepseek.js)、[src/pixel/models/models.js](src/pixel/models/models.js) 与 [docs/roster/](docs/roster/)：
+问问黑哥「兔标版 Q 版黑哥」（[Starbound 拼豆流水线](docs/heige_q/starbound-breakdown.png)）与 17 位 AI 大模型全家福（共 18 位同框：兔标 Q 版黑哥居中领衔，Claude 保留 Clawd 出演，另有 DeepSeek、GPT、Gemini、Grok、Llama、Mistral、NewBing、Updream、豆包、千问、Kimi、混元、智谱、MiniMax、MiMo、文心），全部接入统一像素绑定骨骼与表情演技引擎（`modelPx()` & `heigeQ()` / `heigePx()`：Starbound `head`/`body`/`frontarm`/`backarm` `.png` + `.frames` 分件拼豆骨骼、8 相与 4 相侧走步态、挤压拉伸与滞空惯性、视线追踪、眨眼、31 种全表情与签名道具联动），见 [src/pixel/heige.js](src/pixel/heige.js)、[src/pixel/models/roster.js](src/pixel/models/roster.js)、[src/pixel/models/deepseek.js](src/pixel/models/deepseek.js)、[src/pixel/models/models.js](src/pixel/models/models.js)、[docs/heige_q/](docs/heige_q/) 与 [docs/roster/](docs/roster/)：
 
 ![问问黑哥与 17 位 AI 大模型全家福，动态展示](docs/roster/family.webp)
 
 ![黑哥、DeepSeek 与 Clawd 同台演戏，动态展示](docs/roster/lineup.webp)
 
-更多像素设定与展示：[黑哥四视角与动作设定表（heige-views.jpg）](docs/roster/heige-views.jpg) · [DeepSeek 全 31 种表情动态表（emotions.webp）](docs/roster/emotions.webp) · 分组静态大图（[01 海外四位](docs/roster/01-overseas.jpg) / [02 平台四位](docs/roster/02-platform.jpg) / [03 国产五位](docs/roster/03-cn-a.jpg) / [04 国产四位](docs/roster/04-cn-b.jpg) / [05 全员 18 位全家福](docs/roster/05-family.jpg)）。
+![兔标版 Q 版黑哥 12 视角与步态动态表](docs/roster/heige-q-views.webp)
+
+![兔标版 Q 版黑哥全 31 种表情动态表](docs/roster/heige-q-emotions.webp)
+
+更多像素设定与展示：[兔标 Q 版黑哥 Starbound 拆件与网格表（starbound-breakdown.png）](docs/heige_q/starbound-breakdown.png) · [兔标 Q 版黑哥视角高清图（heige-q-views.jpg）](docs/roster/heige-q-views.jpg) · [兔标 Q 版黑哥全 31 表情高清图（heige-q-emotions.jpg）](docs/roster/heige-q-emotions.jpg) · [日常版黑哥四视角设定表（heige-views.jpg）](docs/roster/heige-views.jpg) · [DeepSeek 全 31 种表情动态表（emotions.webp）](docs/roster/emotions.webp) · 分组静态大图（[01 海外四位](docs/roster/01-overseas.jpg) / [02 平台四位](docs/roster/02-platform.jpg) / [03 国产五位](docs/roster/03-cn-a.jpg) / [04 国产四位](docs/roster/04-cn-b.jpg) / [05 全员 18 位全家福](docs/roster/05-family.jpg)）。
 
 另一批角色是视频「黑哥武馆」的九个武侠小人（小黑子、黑哥馆主、达里奥、大肥鱼、梁圣、房东老黄、掌柜山姆奥特曼、徒弟、摊主老马），见 [src/pixel/models/wuxia.js](src/pixel/models/wuxia.js) 和 [docs/wuxia/](docs/wuxia/)。
 
@@ -19,6 +23,8 @@ npm install
 node render.mjs --page=pixel.html --loop=pxRoster --stills=1.8,4.8,7.8,10.8,14.4 --out=out/pixel/roster
 node render.mjs --page=pixel.html --loop=pxModelLineup --clip --fps=24 --out=out/pixel/lineup.mp4
 node render.mjs --page=pixel.html --loop=pxModelEmotions --stills=0.5 --out=out/pixel/model_emotions
+node render.mjs --page=pixel.html --loop=pxHeigeQViews --stills=0.5 --out=out/pixel/heige_q_views
+node render.mjs --page=pixel.html --loop=pxHeigeQEmotions --stills=0.5 --out=out/pixel/heige_q_emotions
 node render.mjs --page=pixel.html --loop=pxHeigeViews --stills=0.5 --out=out/pixel/heige_views
 node render.mjs --page=pixel.html --loop=pxWuxiaCast --stills=1.4,3.4,5.4,7.4 --out=out/pixel/wuxia
 ```
@@ -79,5 +85,5 @@ node render.mjs --page=pixel.html --loop=pxActing --clip --fps=24 --out=out/pixe
 | [src/scenes/](src/scenes/) | Your video goes here (the demo is an example) |
 | [render.mjs](render.mjs) | Headless renderer: contact sheets, frame strips, crops, stills, MP4 |
 | [pixel.html](pixel.html), [src/pixel/](src/pixel/) | The pixel back end: the same acting code drawn as pixel art, with 黑哥 and pixel Clawd |
-| [tools/pixel/](tools/pixel/), [art/heige/](art/heige/) | Turning concept art into sprites and building 黑哥's parts; green_scan.py |
+| [tools/pixel/](tools/pixel/), [art/heige/](art/heige/), [docs/heige_q/](docs/heige_q/) | Turning concept art into sprites, Perler-bead Starbound templates & part extractors (`starbound_bead.py`, `build_heige_q_rig.py`, `green_scan.py`), and Starbound `.png`/`.frames` sheets |
 | [docs/](docs/) | Model sheets: [emotions](docs/emotions.jpg) (also [animated](docs/emotions.webp)) and [views, motion and hats](docs/views.jpg) |

@@ -1,0 +1,31 @@
+{
+  "frameGrid": {
+    "size": [
+      58,
+      94
+    ],
+    "dimensions": [
+      15,
+      1
+    ],
+    "names": [
+      [
+        "front.idle",
+        "front.walk.1",
+        "front.walk.2",
+        "front.walk.3",
+        "front.walk.4",
+        "side.idle",
+        "side.walk.1",
+        "side.walk.2",
+        "side.walk.3",
+        "side.walk.4",
+        "back.idle",
+        "back.walk.1",
+        "back.walk.2",
+        "back.walk.3",
+        "back.walk.4"
+      ]
+    ]
+  }
+}

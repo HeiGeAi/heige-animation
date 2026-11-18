@@ -1,0 +1,26 @@
+{
+  "frameGrid": {
+    "size": [
+      58,
+      94
+    ],
+    "dimensions": [
+      10,
+      1
+    ],
+    "names": [
+      [
+        "front.down",
+        "front.out",
+        "front.waveA",
+        "front.waveB",
+        "front.point",
+        "front.cheer",
+        "front.chin",
+        "side.down",
+        "side.walkFwd",
+        "side.walkBack"
+      ]
+    ]
+  }
+}

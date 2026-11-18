@@ -80,4 +80,47 @@
     };
     Object.assign(LOOPS.pxModelEmotions, { len: 4, res: [cols * cw, 4 * ch], px: 3, overlay: labels(cells) });
   }
+
+  // Bunny-Logo Q-Version 黑哥 (Starbound layered rig): 31 emotions + turnaround + 4-frame walk & articulated arm poses
+  {
+    const names = Object.keys(EMO), cols = 8, cw = 68, ch = 122, gy = 108, cells = [];
+    names.forEach((n, i) => cells.push([ZH[n] || n, cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy + 2, n]));
+    LOOPS.pxHeigeQEmotions = t => {
+      prect(0, 0, PW, PH, BG);
+      for (let r = 0; r < 4; r++) { prect(0, ch * r + gy, PW, 1, FLOOR); prect(0, ch * r + gy + 1, PW, 1, FLOOR2); }
+      const tt = onTwos(t);
+      names.forEach((n, i) => modelPx('heige_q', cw * (i % cols) + cw / 2, ch * Math.floor(i / cols) + gy, feel(n, tt, { seed: i })));
+    };
+    Object.assign(LOOPS.pxHeigeQEmotions, { len: 4, res: [cols * cw, 4 * ch], px: 3, overlay: labels(cells) });
+  }
+
+  {
+    const cw = 82, ch = 122, gy = 106, cells = [];
+    const top = [
+      ['正面', t => ({ ...feel('happy', t), view: 'front' })],
+      ['侧面朝右', t => ({ ...feel('neutral', t), view: 'side' })],
+      ['侧面朝左', t => ({ ...feel('neutral', t), view: 'side', flip: true })],
+      ['背面', t => ({ ...feel('neutral', t), view: 'back' })],
+      ['侧走步态', t => ({ ...move('walk', t), view: 'side' })],
+      ['正面走路', t => ({ ...move('walk', t), view: 'front' })],
+    ];
+    const bot = [
+      ['挥手', t => ({ ...feel('happy', t), poseR: 'wave' })],
+      ['灵光指点', t => ({ ...feel('idea', t), poseR: 'point' })],
+      ['欢呼', t => ({ ...feel('excited', t), poseL: 'cheer', poseR: 'cheer' })],
+      ['托腮思考', t => ({ ...feel('thinking', t), poseR: 'chin' })],
+      ['起跳', t => ({ ...feel('excited', t), ...jump(t % 1.5, .35, .95, 2.8) })],
+      ['耍酷墨镜', t => ({ ...feel('cool', t), poseR: 'out' })],
+    ];
+    top.forEach(([zh], i) => cells.push([zh, cw * i + cw / 2, gy + 3]));
+    bot.forEach(([zh], i) => cells.push([zh, cw * i + cw / 2, ch + gy + 3]));
+    LOOPS.pxHeigeQViews = t => {
+      prect(0, 0, PW, PH, BG);
+      for (let r = 0; r < 2; r++) { prect(0, ch * r + gy, PW, 1, FLOOR); prect(0, ch * r + gy + 1, PW, 1, FLOOR2); }
+      const tt = onTwos(t);
+      top.forEach(([, f], i) => modelPx('heige_q', cw * i + cw / 2, gy, { seed: i, ...f(tt) }));
+      bot.forEach(([, f], i) => modelPx('heige_q', cw * i + cw / 2, ch + gy, { seed: i + 6, ...f(tt) }));
+    };
+    Object.assign(LOOPS.pxHeigeQViews, { len: 4, res: [6 * cw, 2 * ch], px: 3, overlay: labels(cells) });
+  }
 })();

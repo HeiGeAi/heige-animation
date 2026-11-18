@@ -17,14 +17,17 @@
     curtain(t, 1);
     for (const x of [72, 160, 248]) spot(x, t, { w: 60 });
 
+    const walkHg = lt < 1.12 ? stroll(lt, 0, 1.05, 36, 72, 4) : { x: 72 };
     const walk = lt < 1.12 ? stroll(lt, 0, 1.05, 198, 160, 4) : { x: 160 };
     const tkHg = take(lt, 1.50, .34), tkDs = take(lt, 1.56, .34), tkCl = take(lt, 1.53, .34);
     const hop = jump(lt, 4.15, 4.75, 2.8);
     const hopCl = jump(lt, 4.22, 4.82, 2.5);
 
-    const hgO = emo(lt, HG_KEYS, { seed: 1 });
-    hgO.dy = (hgO.dy || 0) + hop.dy + tkHg.dy; hgO.sq = (hgO.sq || 0) + hop.sq + tkHg.sq; hgO.rot = (hgO.rot || 0) + tkHg.rot;
-    hg(72, FLOOR, hgO);
+    const hgO = lt < 1.05
+      ? { ...emo(lt, [[0, 'happy']], { seed: 1 }), view: 'side', walk: walkHg.walk, dy: walkHg.dy }
+      : emo(lt, HG_KEYS, { seed: 1 });
+    if (lt >= 1.05) { hgO.dy = (hgO.dy || 0) + hop.dy + tkHg.dy; hgO.sq = (hgO.sq || 0) + hop.sq + tkHg.sq; hgO.rot = (hgO.rot || 0) + tkHg.rot; }
+    modelPx('heige_q', Math.round(walkHg.x), FLOOR, hgO);
 
     const dsO = lt < 1.05
       ? { ...emo(lt, [[0, 'happy']], { seed: 2 }), walk: walk.walk, dy: walk.dy, flip: true }

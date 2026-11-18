@@ -4,7 +4,7 @@
 //   node render.mjs --page=pixel.html --loop=pxRoster --stills=1.8,4.8,7.8,10.8,14.4 --out=out/pixel/roster
 (() => {
   const D = { marks: { a: 0, b: 3, c: 6, d: 9, all: 12 }, cues: [], len: 16 }, K = pxGame(D);
-  const { shot, curtain, spot, hg, cl, emo, feelT, chip, push, sparkle, GOLDL, CREAM } = K;
+  const { shot, curtain, spot, cl, emo, feelT, chip, push, sparkle, GOLDL, CREAM } = K;
   const NAME = {
     heige: '黑哥',
     claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', grok: 'Grok', llama: 'Llama', mistral: 'Mistral', newbing: 'NewBing', updream: 'Updream',
@@ -42,7 +42,7 @@
   };
 
   const drawOne = (k, x, y, o, size = 7) => {
-    if (k === 'heige') hg(Math.round(x), y, o);
+    if (k === 'heige') modelPx('heige_q', Math.round(x), y, o);
     else if (k === 'claude') cl(x, y, o);
     else modelPx(k, Math.round(x), y, o);
     chip(NAME[k], x, y + 12, k === 'heige' ? GOLDL : CREAM, size);
@@ -82,7 +82,7 @@
       const o = k === 'zhipu'
         ? emo(lt, [[0, 'sleepy'], [1.4, 'surprised'], [2.3, 'proud']], { seed: idx + 1 })
         : k === 'heige'
-          ? emo(lt, [[0, 'happy', { poseR: 'wave' }], [1.5, 'excited', { poseL: 'cheer', poseR: 'cheer' }], [2.5, 'happy', { poseR: 'wave' }]], { seed: 99 })
+          ? emo(lt, [[0, 'happy', { poseR: 'wave' }], [1.5, 'excited'], [2.5, 'happy', { poseR: 'wave' }]], { seed: 99 })
           : feelT(baseMood, t + idx * .13, { seed: idx + 1 });
       if (waving && k === 'claude') { o.poseL = 'wave'; o.poseR = 'wave'; }
       o.dy = (o.dy || 0) + h.dy; o.sq = (o.sq || 0) + h.sq;

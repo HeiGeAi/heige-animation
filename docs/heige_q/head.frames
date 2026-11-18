@@ -1,0 +1,19 @@
+{
+  "frameGrid": {
+    "size": [
+      58,
+      94
+    ],
+    "dimensions": [
+      3,
+      1
+    ],
+    "names": [
+      [
+        "front",
+        "side",
+        "back"
+      ]
+    ]
+  }
+}
