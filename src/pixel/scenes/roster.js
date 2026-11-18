@@ -1,11 +1,12 @@
-// pixel/scenes/roster.js: 问问黑哥's 17-model Q-version AI 大模型全家福 in pixels, fully rigged and acting.
+// pixel/scenes/roster.js: 问问黑哥与 17 位大模型 Q 版全员（18 位同框）AI 大模型全家福 in pixels, fully rigged and acting.
 // Every model uses the shared acting engine (emotions(), jump(), take(), feel(), blinking, iris gaze, tears,
-// shades, waving arms, and animated signature props) across four close shots plus a lively 17-model riser finale.
-//   node render.mjs --page=pixel.html --loop=pxRoster --stills=1.8,4.8,7.8,10.8,14.2 --out=out/pixel/roster
+// shades, and animated signature props) alongside 黑哥 across four close shots plus a lively 18-character finale.
+//   node render.mjs --page=pixel.html --loop=pxRoster --stills=1.8,4.8,7.8,10.8,14.4 --out=out/pixel/roster
 (() => {
   const D = { marks: { a: 0, b: 3, c: 6, d: 9, all: 12 }, cues: [], len: 16 }, K = pxGame(D);
-  const { shot, curtain, spot, cl, emo, feelT, chip, push, sparkle, CREAM } = K;
+  const { shot, curtain, spot, hg, cl, emo, feelT, chip, push, sparkle, GOLDL, CREAM } = K;
   const NAME = {
+    heige: '黑哥',
     claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', grok: 'Grok', llama: 'Llama', mistral: 'Mistral', newbing: 'NewBing', updream: 'Updream',
     deepseek: 'DeepSeek', doubao: '豆包', qianwen: '千问', kimi: 'Kimi', hunyuan: '混元', zhipu: '智谱', minimax: 'MiniMax', mimo: 'MiMo', wenxin: '文心'
   };
@@ -34,16 +35,17 @@
     wenxin:   (lt, i) => emo(lt, [[0, 'teary', { lookX: -1 }], [1.4, 'happy']], { seed: i }),
   };
 
-  // Contrasting signature moods + staggered waves & hops for the 17-model grand finale
+  // Contrasting signature moods + staggered waves & hops for the 18-character (黑哥 + 17 AI models) grand finale
   const FINALE_MOOD = {
-    claude: 'happy', gpt: 'happy', gemini: 'playful', grok: 'cool', llama: 'sleepy', mistral: 'excited', newbing: 'idea', updream: 'love',
+    heige: 'happy', claude: 'happy', gpt: 'happy', gemini: 'playful', grok: 'cool', llama: 'sleepy', mistral: 'excited', newbing: 'idea', updream: 'love',
     deepseek: 'excited', doubao: 'playful', qianwen: 'happy', kimi: 'happy', hunyuan: 'shy', zhipu: 'smug', minimax: 'laugh', mimo: 'starstruck', wenxin: 'hopeful',
   };
 
   const drawOne = (k, x, y, o, size = 7) => {
-    if (k === 'claude') cl(x, y, o);
+    if (k === 'heige') hg(Math.round(x), y, o);
+    else if (k === 'claude') cl(x, y, o);
     else modelPx(k, Math.round(x), y, o);
-    chip(NAME[k], x, y + 12, CREAM, size);
+    chip(NAME[k], x, y + 12, k === 'heige' ? GOLDL : CREAM, size);
   };
 
   const row = (lt, t, keys, seedBase = 0) => {
@@ -63,11 +65,11 @@
   shot('d', (lt, t) => { curtain(t, 1); row(lt, t, ['zhipu', 'minimax', 'mimo', 'wenxin'], 13); }, cam);
   shot('all', (lt, t) => {
     curtain(t, 1);
-    const back = ['claude', 'gpt', 'gemini', 'grok', 'llama', 'mistral', 'newbing', 'updream'];
+    const back = ['claude', 'gpt', 'gemini', 'grok', 'heige', 'llama', 'mistral', 'newbing', 'updream'];
     const front = ['deepseek', 'doubao', 'qianwen', 'kimi', 'hunyuan', 'zhipu', 'minimax', 'mimo', 'wenxin'];
     const yb = FLOOR - 128, R = prect;
     R(86, yb + 2, PW - 172, 6, '#4A2C1C'); R(86, yb + 2, PW - 172, 1, '#8A5A34'); R(86, yb + 8, PW - 172, 3, '#2E1C14');
-    const xb = i => Math.round(108 + (PW - 216) * i / 7);
+    const xb = i => Math.round(100 + (PW - 200) * i / 8);
     const xf = i => Math.round(100 + (PW - 200) * i / 8);
 
     const castFinale = (k, i, x, y, rowOff) => {
@@ -79,14 +81,16 @@
       const baseMood = FINALE_MOOD[k] || 'happy';
       const o = k === 'zhipu'
         ? emo(lt, [[0, 'sleepy'], [1.4, 'surprised'], [2.3, 'proud']], { seed: idx + 1 })
-        : feelT(baseMood, t + idx * .13, { seed: idx + 1 });
+        : k === 'heige'
+          ? emo(lt, [[0, 'happy', { poseR: 'wave' }], [1.5, 'excited', { poseL: 'cheer', poseR: 'cheer' }], [2.5, 'happy', { poseR: 'wave' }]], { seed: 99 })
+          : feelT(baseMood, t + idx * .13, { seed: idx + 1 });
       if (waving && k === 'claude') { o.poseL = 'wave'; o.poseR = 'wave'; }
       o.dy = (o.dy || 0) + h.dy; o.sq = (o.sq || 0) + h.sq;
       drawOne(k, x, y, o, 7);
     };
 
     back.forEach((k, i) => castFinale(k, i, xb(i), yb, 0));
-    front.forEach((k, i) => castFinale(k, i, xf(i), FLOOR, 8));
+    front.forEach((k, i) => castFinale(k, i, xf(i), FLOOR, 9));
     sparkle(PW / 2, PH * .4, PW * .45, t, 24);
   }, { in: { type: 'cut' }, res: [640, 360], cam: (lt, t, d) => [320, 176, 1.0] });
 
