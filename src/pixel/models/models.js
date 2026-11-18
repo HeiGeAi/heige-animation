@@ -33,29 +33,29 @@ const MODEL_RIGS = {"dsChibi":{"w":69,"h":92,"cx":34,"outline":"a","skinKeys":["
 
 const MODEL_U = 4;
 const Q_STAMP_PAL = {
-  '!@': '#12142B', '!#': '#1E1A2E', '!W': '#FFFFFF', '!M': '#5A2430', '!T': '#E8607E', '!t': '#FFF4EC',
+  '!@': '#12142B', '!#': '#1E1A2E', '!L': '#7D3E44', '!l': '#A85C5E', '!W': '#FFFFFF', '!M': '#9E3645', '!T': '#F2798D', '!t': '#FFF7F2',
   '!P': '#F58E8E', '!%': '#E86F78', '!y': '#22A7D6', '!Y': '#8EDCF4', '!R': '#F0384E', '!$': '#A61F35',
   '!A': '#F6B13E', '!a': '#FFE7A6', '!~': '#3A3166', '!K': '#1E1B2E', '!&': '#3B3758',
 };
 
-// Anime 6-7px eye stamps (built cleanly inside each character's eye mask) and compact chibi mouths.
+// Anime 6-7px eye stamps (built cleanly inside each character's eye mask) and delicate rose-umber chibi mouths.
 const Q_MOUTHS = {
-  smile:  { rows: ['#.#', '.#.'] },
-  flat:   { rows: ['###'] },
-  frown:  { rows: ['.#.', '#.#'] },
-  o:      { rows: ['##', '##'] },
-  O:      { rows: ['.#.', '#M#', '.#.'], dy: -1 },
-  grin:   { rows: ['####', '#tt#', '.##.'], dy: -1 },
-  laugh:  { rows: ['#####', '#ttt#', '#MMM#', '.###.'], dy: -1 },
-  open:   { rows: ['.###.', '#MMM#', '.###.'], dy: -1 },
-  wobble: { rows: ['#.#.#', '.#.#.'] },
-  cat:    { rows: ['#.#.#', '.#.#.'] },
-  smirk:  { rows: ['..#', '##.'] },
-  wail:   { rows: ['.####.', '#MMMM#', '#MTTM#', '.####.'], rows2: ['..##..', '.#MM#.', '#MTTM#', '.####.'], dy: -1 },
-  teeth:  { rows: ['#####', '#t#t#', '#####'], dy: -1 },
-  tongue: { rows: ['#.#', '.#.', '.T.'] },
-  pout:   { rows: ['.#.', '#T#', '.#.'], dy: -1 },
-  yawn:   { rows: ['.#.', '#M#', '#T#', '.#.'], dy: -1 },
+  smile:  { rows: ['L.L', '.L.'] },
+  flat:   { rows: ['LLL'] },
+  frown:  { rows: ['.L.', 'L.L'] },
+  o:      { rows: ['MM', 'TT'] },
+  O:      { rows: ['.L.', 'MTM', '.M.'] },
+  grin:   { rows: ['LttL', '.LL.'] },
+  laugh:  { rows: ['LttL', 'MTTM'] },
+  open:   { rows: ['LLLL', '.TT.'] },
+  wobble: { rows: ['.L.l', 'l.L.'] },
+  cat:    { rows: ['L.L.L', '.L.L.'] },
+  smirk:  { rows: ['..L', 'LL.'] },
+  wail:   { rows: ['.LL.', 'MTTM'], rows2: ['.LL.', 'LTTL'] },
+  teeth:  { rows: ['.LL.', 'LttL'] },
+  tongue: { rows: ['L.L', '.T.'] },
+  pout:   { rows: ['.L.', 'MTM'] },
+  yawn:   { rows: ['.L.', 'MTM', '.M.'] },
 };
 
 const Q_EYES_STAMP = {
