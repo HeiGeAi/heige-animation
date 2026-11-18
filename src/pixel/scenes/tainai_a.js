@@ -180,7 +180,7 @@
       K(T_POLITE, [98.4, G + 4.2, 55.2], [98.6, G + 2.5, 45.5], 58),
       K(T_TRASH, [98.6, G + 4.4, 55.6], [98.6, G + 2.6, 45.5], 58),
     ],
-    lights: () => VX.light(98.5, G + 5, 46, ICE, 11, 1.25),
+    lights: () => VX.light(98.5, G + 5, 46, ICE, 11, .90),
     act: t => {
       const crushed = t >= T_TRASH;
       heige(95.4, G + 1, 46.4, {

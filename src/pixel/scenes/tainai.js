@@ -334,17 +334,18 @@
   const bubble = (x, y, z, txt, t, t0, t1) => { if (t >= t0 && t < t1) BUBS.push([x, y, z, txt, t - t0, t1 - t]); };
   const label = (x, y, z, txt, size, col, t, t0, t1 = 1e9) => { if (t >= t0 && t < t1) LBLS.push([x, y, z, txt, size, col, t - t0, t1 - t]); };
 
+  let CUR_LIT_H = .90, CUR_LIT_M = .80;
   const hgImg = o => VX.capture((x, y) => heigePx(x, y, { ...o, noShadow: true }));
   function heige(x, y, z, o = {}, ex = {}) {
     const sc = ex.k ?? (1.75 / 87);
-    VX.sprite(hgImg(o), x, y + (ex.dy || 0), z, { k: ex.k, flip: !!o.flip });
+    VX.sprite(hgImg(o), x, y + (ex.dy || 0), z, { k: ex.k, lit: ex.lit ?? CUR_LIT_H, flip: !!o.flip });
     if (!ex.noShadow) VX.shadow(x, y, z, .44);
     if (ex.tag) TAGS.push([x, y + 108 * sc, z, ex.tag, ex.tagCol || '#FFD43B']);
   }
   const clImg = o => VX.capture((x, y) => clawdPx(x, y, { ...o, noShadow: true }));
   function clawd(x, y, z, o = {}, ex = {}) {
     const sc = ex.k ?? .017;
-    VX.sprite(clImg(o), x, y + (ex.dy || 0), z, { k: sc });
+    VX.sprite(clImg(o), x, y + (ex.dy || 0), z, { k: sc, lit: ex.lit ?? CUR_LIT_H });
     if (!ex.noShadow) VX.shadow(x, y, z, .36);
     if (ex.tag !== false) TAGS.push([x, y + 96 * sc, z, ex.tag || 'Claude', ex.tagCol || '#FFA882']);
   }
@@ -359,7 +360,7 @@
   }
   function model(name, x, y, z, emo = 'happy', t = 0, ex = {}) {
     const ph = Math.floor(t * 4) % 4, sc = ex.k ?? .022;
-    VX.sprite(modelImg(name, emo, ph), x, y + (ex.dy || 0), z, { k: sc, flip: !!ex.flip });
+    VX.sprite(modelImg(name, emo, ph), x, y + (ex.dy || 0), z, { k: sc, lit: ex.lit ?? CUR_LIT_M, flip: !!ex.flip });
     if (!ex.noShadow) VX.shadow(x, y, z, .46);
     if (ex.tag !== false) {
       const nmMap = { deepseek: 'DeepSeek', doubao: '豆包', kimi: 'Kimi', gpt: 'ChatGPT', qianwen: '千问', gemini: 'Gemini' };
@@ -376,7 +377,7 @@
     助理: { c1: '#5C647C', c2: '#444C60', hair: '#262030' },
     老板: { c1: '#262038', c2: '#181426', hair: '#241E2C', tie: '#E83A44' },
     老员工: { c1: '#4A628A', c2: '#364A6A', hair: '#282230', tie: '#72C9FE' },
-    好学生: { c1: '#EDE4D2', c2: '#CFC4B0', hair: '#26202C', glasses: true },
+    好学生: { c1: '#B9C4D6', c2: '#95A2B8', hair: '#26202C', tie: '#3B5C96', glasses: true },
   };
   const pplCache = new Map();
   function pplImg(role, mood = 'neutral', ph = 0) {
@@ -414,7 +415,7 @@
     const walkBob = ex.walk ? -Math.abs(Math.sin(t * 7)) * .07 : 0;
     const sh = ex.shake ? Math.sin(t * 28) * .04 : 0;
     const sc = ex.k ?? (1.75 / 87);
-    VX.sprite(pplImg(role, mood, Math.floor(t * 6) % 2), x + sh, y + walkBob + (ex.dy || 0), z, { k: ex.k, flip: !!ex.flip });
+    VX.sprite(pplImg(role, mood, Math.floor(t * 6) % 2), x + sh, y + walkBob + (ex.dy || 0), z, { k: ex.k, lit: ex.lit ?? CUR_LIT_M, flip: !!ex.flip });
     if (!ex.noShadow) VX.shadow(x, y, z, .42);
     if (ex.tag !== false) TAGS.push([x, y + 114 * sc, z, ex.tag || role, ex.tagCol || '#F2E6C8']);
   }
@@ -442,7 +443,7 @@
   PROPS.thumbDn  = mkProp(s => { s.rect(-9, -20, 18, 13, '#FF5A5A').rect(-1, -7, 6, 8, '#FF5A5A').rect(-15, -20, 6, 13, '#3A3250'); }, 40, 34, 20, 28);
   PROPS.mask     = mkProp(s => { s.ell(0, -14, 11, 11, '#FAF0E4').rect(-7, -18, 4, 3, '#1E182A').rect(3, -18, 4, 3, '#1E182A').rect(-4, -10, 8, 2, '#D84A44'); }, 36, 36, 18, 30);
   PROPS.magnify  = mkProp(s => { s.ell(-2, -18, 10, 10, '#D89C2A').ell(-2, -18, 7, 7, '#72C9FE').line(5, -11, 14, -2, '#6E3A20'); }, 40, 36, 20, 30);
-  const prop = (x, y, z, name, ex = {}) => { if (PROPS[name]) VX.sprite(PROPS[name], x, y, z, { k: ex.k ?? .025, flip: !!ex.flip }); };
+  const prop = (x, y, z, name, ex = {}) => { if (PROPS[name]) VX.sprite(PROPS[name], x, y, z, { k: ex.k ?? .025, lit: ex.lit ?? CUR_LIT_H, flip: !!ex.flip }); };
 
   // ======================================================================================= 3D 粒子与能量场特效
   function burst(t, t0, x, y, z, col = [255, 212, 59], n = 18) {
@@ -756,20 +757,20 @@
     c.restore();
   }
 
-  // 电影感暖辉光与暗角
+  // 电影感暖辉光与暗角（仅对极亮灯源轻度柔光，绝不让浅色衣服/皮肤人物发白过曝）
   let BR = null;
   function post(c) {
     if (!BR && typeof BUF !== 'undefined') { BR = document.createElement('canvas'); BR.width = PW; BR.height = PH; }
     if (BR && typeof BUF !== 'undefined') {
       const bx = BR.getContext('2d'), id = bx.createImageData(PW, PH);
       for (let i = 0, n = PW * PH * 4; i < n; i += 4) {
-        const l = BUF[i] * .3 + BUF[i + 1] * .55 + BUF[i + 2] * .15, k = clamp01((l - 155) / 90);
+        const l = BUF[i] * .3 + BUF[i + 1] * .55 + BUF[i + 2] * .15, k = clamp01((l - 234) / 21);
         id.data[i] = BUF[i] * k; id.data[i + 1] = BUF[i + 1] * k; id.data[i + 2] = BUF[i + 2] * k; id.data[i + 3] = 255;
       }
       bx.putImageData(id, 0, 0);
-      c.save(); c.globalCompositeOperation = 'lighter'; c.imageSmoothingEnabled = true;
-      c.filter = 'blur(20px)'; c.globalAlpha = .44; c.drawImage(BR, 0, 0, 1920, 1080);
-      c.filter = 'blur(5px)'; c.globalAlpha = .18; c.drawImage(BR, 0, 0, 1920, 1080); c.restore();
+      c.save(); c.globalCompositeOperation = 'screen'; c.imageSmoothingEnabled = true;
+      c.filter = 'blur(14px)'; c.globalAlpha = .12; c.drawImage(BR, 0, 0, 1920, 1080);
+      c.filter = 'blur(4px)'; c.globalAlpha = .05; c.drawImage(BR, 0, 0, 1920, 1080); c.restore();
     }
     const g = c.createRadialGradient(960, 540, 440, 960, 540, 1180);
     g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(10,6,14,.44)');
@@ -836,7 +837,10 @@
       roll: .004 * Math.sin(t * .7),
     };
 
-    VX.setDay(S && S.day !== undefined ? (typeof S.day === 'function' ? S.day(t) : S.day) : DUSK);
+    const dayVal = S && S.day !== undefined ? (typeof S.day === 'function' ? S.day(t) : S.day) : DUSK;
+    CUR_LIT_M = dayVal >= DAY - .06 ? .72 : dayVal >= GOLDEN - .04 ? .76 : .80;
+    CUR_LIT_H = dayVal >= DAY - .06 ? .82 : dayVal >= GOLDEN - .04 ? .86 : .90;
+    VX.setDay(dayVal);
     VX.setAlert(S && S.alert !== undefined ? (typeof S.alert === 'function' ? S.alert(t) : S.alert) : false);
     const f = S && S.fog ? (typeof S.fog === 'function' ? S.fog(t) : S.fog) : [52, 165];
     VX.setFog(f[0], f[1]);
