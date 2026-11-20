@@ -17,9 +17,10 @@
 //   --chrome=<path to Chrome/Chromium>.
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { createHash, randomUUID } from 'node:crypto';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, statSync, renameSync, readdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { homedir } from 'node:os';
 
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
@@ -34,20 +35,73 @@ function playwrightChromes() {
     .map(n => `${dir}/${n}/chrome-linux64/chrome`);
 }
 const CHROME = CHROMES.find(p => p && existsSync(p));
-if (!CHROME) { console.error('Chrome not found: pass --chrome=<path> or set CHROME_PATH'); process.exit(1); }
-const fps = +(args.fps || 24), FRAMES_DIR = 'out/frames';
-const run = (cmd, a) => new Promise((ok, bad) => { const p = spawn(cmd, a, { stdio: 'inherit' }); p.on('close', c => c ? bad(new Error(cmd + ' exited ' + c)) : ok()); });
+if (!args.encode && !CHROME) { console.error('Chrome not found: pass --chrome=<path> or set CHROME_PATH'); process.exit(1); }
+const fps = Number(args.fps ?? 24);
+if (!Number.isFinite(fps) || fps <= 0) throw new Error('--fps must be a positive number');
+const FRAMES_DIR = 'out/frames';
+const FRAME_JOB = join(FRAMES_DIR, 'latest.json');
+const run = (cmd, a) => new Promise((resolve, reject) => {
+  const child = spawn(cmd, a, { stdio: 'inherit' });
+  child.once('error', reject);
+  child.once('close', code => code === 0 ? resolve() : reject(new Error(cmd + ' exited ' + code)));
+});
 const times = s => String(s).split(',').map(Number);
 const span = s => String(s).split(':').map(Number);
 // comma-separated fields, keeping commas inside parentheses ('PLK.MX(1.38),PLK.WL,500,300'); numbers stay numbers
 const fields = s => { const out = []; let d = 0, cur = ''; for (const ch of String(s)) { if (ch === ',' && !d) { out.push(cur); cur = ''; continue; } d += ch === '(' ? 1 : ch === ')' ? -1 : 0; cur += ch; } out.push(cur); return out.map(v => isNaN(+v) ? v : +v); };
 
+function framePath(dir, index) {
+  return join(dir, 'f' + String(index).padStart(5, '0') + '.jpg');
+}
+
+function atomicWrite(path, data) {
+  const temporary = path + '.' + randomUUID() + '.tmp';
+  writeFileSync(temporary, data);
+  renameSync(temporary, path);
+}
+
+function hasFrame(dir, index) {
+  const info = statSync(framePath(dir, index), { throwIfNoEntry: false });
+  return info?.isFile() && info.size > 0;
+}
+
+function latestFrameJob() {
+  if (!existsSync(FRAME_JOB)) {
+    // Older releases kept unlabelled frames directly under out/frames.
+    if (!existsSync(FRAMES_DIR)) throw new Error('No frame sequence found. Run --frames first.');
+    const indices = readdirSync(FRAMES_DIR)
+      .filter(name => /^f\d{5,}\.jpg$/.test(name))
+      .map(name => Number(name.slice(1, -4)))
+      .sort((a, b) => a - b);
+    if (!indices.length) throw new Error('No frame sequence found. Run --frames first.');
+    return { dir: FRAMES_DIR, first: indices[0], last: indices.at(-1), fps, audio: '' };
+  }
+  const job = JSON.parse(readFileSync(FRAME_JOB, 'utf8'));
+  if (!/^[a-f0-9]{64}$/.test(job.id) || !Number.isSafeInteger(job.first)
+    || !Number.isSafeInteger(job.last) || job.first < 0 || job.last < job.first
+    || !Number.isFinite(job.fps) || job.fps <= 0 || typeof job.audio !== 'string') {
+    throw new Error('Invalid frame metadata. Run --frames again.');
+  }
+  return { ...job, dir: join(FRAMES_DIR, job.id) };
+}
+
 if (args.encode) {
-  const out = args.out || 'out/video.mp4', n = readdirSync(FRAMES_DIR).filter(f => f.endsWith('.jpg')).length, audio = args.audio;
-  console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''}`);
-  await run('ffmpeg', ['-y', '-loglevel', 'error', '-stats', '-framerate', String(fps), '-i', `${FRAMES_DIR}/f%05d.jpg`,
-    ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
+  const job = latestFrameJob();
+  for (let i = job.first; i <= job.last; i++) {
+    if (!hasFrame(job.dir, i)) throw new Error('Missing frame ' + i + '. Finish --frames before encoding.');
+  }
+  const rate = args.fps === undefined ? job.fps : fps;
+  const out = args.out || 'out/video.mp4';
+  const count = job.last - job.first + 1;
+  const audio = args.audio ?? job.audio;
+  mkdirSync(dirname(out), { recursive: true });
+  console.log('encoding ' + count + ' frames → ' + out + (audio ? ' with ' + audio : ''));
+  await run('ffmpeg', ['-y', '-loglevel', 'error', '-stats', '-framerate', String(rate),
+    '-start_number', String(job.first), '-i', join(job.dir, 'f%05d.jpg'),
+    ...(audio ? ['-ss', String(job.first / job.fps), '-t', String(count / rate), '-i', audio,
+      '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-af', 'apad', '-shortest'] : []),
+    '-frames:v', String(count), '-c:v', 'libx264', '-preset', 'slow', '-crf', '17',
+    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
   console.log('wrote ' + out);
   process.exit(0);
 }
@@ -66,11 +120,15 @@ const browser = await puppeteer.launch({
   executablePath: CHROME, headless: true, protocolTimeout: 0,
   args: [...sandbox, '--allow-file-access-from-files', '--ignore-gpu-blocklist', ...gpu, '--enable-gpu-rasterization', '--window-size=1920,1080', '--disable-renderer-backgrounding', '--disable-background-timer-throttling']
 });
-async function openPage(tag = '') {
+const pageFile = resolve(args.page || 'studio.html');
+async function openPage(tag = '', files) {
   const page = await browser.newPage();
   page.on('console', m => { if (['error', 'warn'].includes(m.type())) console.log(`[page${tag}]`, m.text()); });
   page.on('pageerror', e => console.log(`[page error${tag}]`, e.message));
-  await page.goto(pathToFileURL(resolve(args.page || 'studio.html')).href + '?render', { waitUntil: 'networkidle0' });   // --page=pixel.html for the pixel back end
+  if (files) page.on('response', (response) => {
+    if (response.ok() && response.url().startsWith('file:')) files.add(fileURLToPath(response.url()));
+  });
+  await page.goto(pathToFileURL(pageFile).href + '?render', { waitUntil: 'networkidle0' });   // --page=pixel.html for the pixel back end
   await page.waitForFunction('window.ready === true', { timeout: 60000 });
   if (args.loop) {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);
@@ -120,33 +178,62 @@ if (args.sheet || args.strip) {
   }));
   console.log(`${n} frames → ${out}  (${((Date.now() - start) / n).toFixed(0)} ms/frame)`);
 } else if (args.frames) {
-  // Parallel and resumable: each worker pulls the next missing frame; files are written atomically.
-  const probe = await openPage(), len = await lengthOf(probe); await probe.close();
-  const [a, b] = args.range ? span(args.range) : [0, len], workers = +(args.workers || 4);
-  mkdirSync(FRAMES_DIR, { recursive: true });
-  const first = Math.round(a * fps), last = Math.min(Math.ceil(len * fps) - 1, Math.round(b * fps) - 1);
-  const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (!existsSync(f) || statSync(f).size < 1000) todo.push(i); }
-  console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers`);
-  let next = 0, done = 0; const start = Date.now();
-  await Promise.all(Array.from({ length: workers }, async (_, w) => {
-    const page = await openPage('#' + w);
-    while (next < todo.length) {
-      const i = todo[next++], f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`;
-      const buf = await frameOf(page, i / fps, 'image/jpeg', .94);
-      writeFileSync(f + '.tmp', buf); renameSync(f + '.tmp', f);
-      if (++done % 24 === 0 || done === todo.length) {
-        const el = (Date.now() - start) / 1000;
-        console.log(`frame ${done}/${todo.length}  ${(el / done * 1000).toFixed(0)} ms/frame effective  eta ${((todo.length - done) * el / done / 60).toFixed(1)} min`);
-      }
+  try {
+    // Reuse a frame only when the inputs to the renderer are unchanged.
+    const files = new Set([pageFile, fileURLToPath(import.meta.url)]);
+    const probe = await openPage('', files);
+    const len = await lengthOf(probe);
+    const projectAudio = await probe.evaluate(() => typeof PROJECT === 'undefined' ? '' : PROJECT.audio || '');
+    await probe.close();
+    const [a, b] = args.range ? span(args.range) : [0, len];
+    const workers = Number(args.workers ?? 4);
+    const first = Math.round(a * fps), last = Math.min(Math.ceil(len * fps) - 1, Math.round(b * fps) - 1);
+    if (!Number.isSafeInteger(first) || !Number.isSafeInteger(last) || first < 0 || last < first
+      || !Number.isSafeInteger(workers) || workers < 1) {
+      throw new Error('Expected a non-empty frame range and a positive worker count.');
     }
-  }));
+
+    const hash = createHash('sha256').update(JSON.stringify({
+      first, last, fps, loop: args.loop || null, mip: args.mip || null, soft: Boolean(args.soft),
+      chrome: await browser.version(), gpu,
+    }));
+    for (const file of [...files].sort()) {
+      hash.update(JSON.stringify([file, createHash('sha256').update(readFileSync(file)).digest('hex')]));
+    }
+    const id = hash.digest('hex');
+    const dir = join(FRAMES_DIR, id);
+    const audio = args.audio ?? projectAudio;
+    mkdirSync(dir, { recursive: true });
+    atomicWrite(FRAME_JOB, JSON.stringify({ id, first, last, fps, audio: audio ? resolve(audio) : '' }));
+
+    const todo = [];
+    for (let i = first; i <= last; i++) if (!hasFrame(dir, i)) todo.push(i);
+    console.log(todo.length + ' frames to render (' + (last - first + 1 - todo.length) + ' already done), ' + workers + ' workers');
+    let next = 0, done = 0;
+    const start = Date.now();
+    await Promise.all(Array.from({ length: Math.min(workers, todo.length) }, async (_, w) => {
+      const page = await openPage('#' + w);
+      while (next < todo.length) {
+        const i = todo[next++];
+        atomicWrite(framePath(dir, i), await frameOf(page, i / fps, 'image/jpeg', .94));
+        if (++done % 24 === 0 || done === todo.length) {
+          const el = (Date.now() - start) / 1000;
+          console.log('frame ' + done + '/' + todo.length + '  ' + (el / done * 1000).toFixed(0)
+            + ' ms/frame effective  eta ' + ((todo.length - done) * el / done / 60).toFixed(1) + ' min');
+        }
+      }
+    }));
+  } catch (error) {
+    await browser.close();
+    throw error;
+  }
 } else if (args.clip) {
   const page = await openPage(), len = await lengthOf(page);
   const [a, b] = args.range ? span(args.range) : typeof args.clip === 'string' ? span(args.clip) : [0, len];
   const audio = args.audio || await page.evaluate(() => PROJECT.audio || '');
   const out = args.out || 'out/clip.mp4'; mkdirSync(dirname(out), { recursive: true });
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
-    ...(audio ? ['-ss', String(a), '-t', String(b - a), '-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
+    ...(audio ? ['-ss', String(a), '-t', String(b - a), '-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-af', 'apad', '-shortest'] : []),
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out],
     { stdio: ['pipe', 'inherit', 'inherit'] });
   const n = Math.round((b - a) * fps), start = Date.now();
