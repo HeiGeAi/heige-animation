@@ -207,6 +207,8 @@ node render.mjs --frames --workers=4                            # or: parallel +
 node render.mjs --encode --out=out/video.mp4                    # … then encode them
 ```
 
+The frame cache stores each scene and frame range in its own folder under `out/frames`. Re-running the same render resumes missing frames. `--encode` uses the latest frame sequence, its frame rate and its project audio. Run `--frames` again before encoding after changing the scene or range.
+
 ---
 
 ## Engine
